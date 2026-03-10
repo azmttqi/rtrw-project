@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  db_rtrw_service:
+    image: postgres
+    container_name: db_rtrw2      
+    env_file:
+      - ./backend/.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}              
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - ./database/rtrw.sql:/docker-entrypoint-initdb.d/rtrw.sql
+    restart: unless-stopped
