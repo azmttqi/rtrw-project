@@ -35,8 +35,8 @@ Implementasi struktur dasar backend API dan setup database.
 ## Phase 2: Core API Development & Authentication
 Membangun fitur utama pada sisi Backend.
 
-- [ ] **Authentication & Authorization**: Implementasi Login menggunakan JWT dan Role-based Access Control (Role: Admin/RT/RW, Warga).
-- [ ] **Manajemen Warga & Keluarga (CRUD)**: API untuk pendaftaran, update data, dan pencarian warga.
+- [x] **Authentication & Authorization**: Implementasi Login menggunakan JWT dan Role-based Access Control (Role: Admin/RT/RW, Warga).
+- [x] **Manajemen Warga & Keluarga (CRUD)**: API untuk pendaftaran, update data, dan pencarian warga.
 - [ ] **Manajemen Iuran & Keuangan**: API untuk mencatat pembayaran iuran bulanan dan laporan kas.
 - [ ] **Manajemen Pengumuman**: API untuk membuat dan menyebarkan pengumuman/berita kepada warga.
 - [ ] **Manajemen Fasilitas**: API untuk peminjaman dan penjadwalan fasilitas publik RT/RW.
