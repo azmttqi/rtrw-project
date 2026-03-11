@@ -9,6 +9,7 @@ const familiesRoutes = require('./routes/families.routes');
 const residentsRoutes = require('./routes/residents.routes');
 const announcementsRoutes = require('./routes/announcements.routes');
 const facilitiesRoutes = require('./routes/facilities.routes');
+const duesRoutes = require('./routes/dues.routes');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/families', familiesRoutes);
 app.use('/api/residents', residentsRoutes);
 app.use('/api/announcements', announcementsRoutes);
 app.use('/api/facilities', facilitiesRoutes);
+app.use('/api/dues', duesRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

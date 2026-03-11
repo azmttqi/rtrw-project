@@ -37,7 +37,7 @@ Membangun fitur utama pada sisi Backend.
 
 - [x] **Authentication & Authorization**: Implementasi Login menggunakan JWT dan Role-based Access Control (Role: Admin/RT/RW, Warga).
 - [x] **Manajemen Warga & Keluarga (CRUD)**: API untuk pendaftaran, update data, dan pencarian warga.
-- [ ] **Manajemen Iuran & Keuangan**: API untuk mencatat pembayaran iuran bulanan dan laporan kas.
+- [x] **Manajemen Iuran & Keuangan**: API untuk mencatat pembayaran iuran bulanan dan laporan kas.
 - [ ] **Manajemen Pengumuman**: API untuk membuat dan menyebarkan pengumuman/berita kepada warga.
 - [ ] **Manajemen Fasilitas**: API untuk peminjaman dan penjadwalan fasilitas publik RT/RW.
 - [ ] **Layanan Surat Menyurat**: API untuk request surat pengantar oleh warga dan persetujuan oleh RT/RW.
