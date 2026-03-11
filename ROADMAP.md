@@ -29,8 +29,8 @@ Implementasi struktur dasar backend API dan setup database.
 - [x] **Database Setup**: Pembuatan skema SQL (`rtrw.sql`) dan konfigurasi Docker Compose untuk PostgreSQL.
 - [x] **Backend Skeleton**: Konfigurasi server Node.js dengan Express.js.
 - [x] **Environment Configuration**: Setup `.env` untuk manajemen konfigurasi.
-- [ ] **Database Connection**: Implementasi koneksi dari Node.js ke PostgreSQL.
-- [ ] **Error Handling & Middleware**: Setup middleware standar (CORS, body parser, error handler).
+- [x] **Database Connection**: Implementasi koneksi dari Node.js ke PostgreSQL.
+- [x] **Error Handling & Middleware**: Setup middleware standar (CORS, body parser, error handler).
 
 ## Phase 2: Core API Development & Authentication
 Membangun fitur utama pada sisi Backend.
