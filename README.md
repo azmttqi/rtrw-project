@@ -94,5 +94,6 @@ Aplikasi ini menggunakan JSON Web Token (JWT) untuk melindungi endpoint. Token J
 ---
 
 ## 🗺️ Rencana Pengembangan (Roadmap)
-Saat ini proyek berfokus pada pengembangan **Backend API** dan **Database**. 
-Aplikasi antarmuka pengguna (**Frontend**) masih dalam tahap perencanaan dan akan ditambahkan ke dalam repositori ini pada pengembangan selanjutnya.
+Saat ini proyek telah menyelesaikan pengembangan inti **Backend API** dan **Database** (Phase 1 & 2). 
+
+Tahap pengembangan **Frontend** (Phase 3) menggunakan Flutter telah dimulai. Fokus saat ini adalah membangun antarmuka pengguna (UI) dan integrasi dengan API yang sudah tersedia. Seluruh detail rencana pengembangan dapat dilihat pada file [ROADMAP.md](file:///d:/kuliah/project-rtrw/ROADMAP.md).
