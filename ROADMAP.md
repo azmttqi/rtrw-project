@@ -39,7 +39,7 @@ Membangun fitur utama pada sisi Backend.
 - [x] **Manajemen Warga & Keluarga (CRUD)**: API untuk pendaftaran, update data, dan pencarian warga.
 - [x] **Manajemen Iuran & Keuangan**: API untuk mencatat pembayaran iuran bulanan dan laporan kas.
 - [x] **Manajemen Pengumuman**: API untuk membuat dan menyebarkan pengumuman/berita kepada warga.
-- [ ] **Manajemen Fasilitas**: API untuk peminjaman dan penjadwalan fasilitas publik RT/RW.
+- [x] **Manajemen Fasilitas**: API untuk peminjaman dan penjadwalan fasilitas publik RT/RW.
 - [ ] **Layanan Surat Menyurat**: API untuk request surat pengantar oleh warga dan persetujuan oleh RT/RW.
 
 ## Phase 3: Frontend Development (Admin & User Portals)

@@ -180,7 +180,32 @@ CREATE TABLE facilities (
     deskripsi TEXT,
     foto_url TEXT,
 
+    alamat TEXT,
+    koordinat_maps_url TEXT,
+    bisa_dipinjam BOOLEAN DEFAULT FALSE,
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =====================================================
+-- PEMINJAMAN FASILITAS
+-- =====================================================
+
+CREATE TABLE facility_reservations (
+    id SERIAL PRIMARY KEY,
+    facility_id INT REFERENCES facilities(id) ON DELETE CASCADE,
+    peminjam_user_id INT REFERENCES users(id),
+
+    tanggal_mulai DATE NOT NULL,
+    tanggal_selesai DATE NOT NULL,
+    keterangan TEXT,
+
+    status status_verifikasi DEFAULT 'PENDING',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_tanggal CHECK (tanggal_selesai >= tanggal_mulai)
 );
 
 -- =====================================================
@@ -399,4 +424,11 @@ CREATE INDEX idx_dues_bills_family ON dues_bills(family_id);
 CREATE INDEX idx_family_rt_history_family ON family_rt_history(family_id);
 CREATE INDEX idx_complaints_rt ON complaints(rt_id);
 CREATE INDEX idx_complaints_status ON complaints(status);
+CREATE INDEX idx_facility_reservations_facility ON facility_reservations(facility_id);
+
+-- Trigger untuk facility_reservations
+CREATE TRIGGER update_facility_reservations_updated_at
+    BEFORE UPDATE ON facility_reservations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 

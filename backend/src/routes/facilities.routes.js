@@ -1,88 +1,33 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth.middleware');
-const { isRT } = require('../middleware/role.middleware');
-const pool = require('../config/database');
-const { successResponse, createdResponse, validationErrorResponse, notFoundResponse } = require('../utils/response');
+const { isRT, isRW } = require('../middleware/role.middleware');
+const facilitiesController = require('../controllers/facilities.controller');
 
-// Create facility
-router.post('/', authenticate, isRT(), async (req, res, next) => {
-  try {
-    const { nama_fasilitas, deskripsi, foto_url } = req.body;
-    const rt_id = req.user.rt_id;
+// --- Catalog Routes ---
+// POST /api/facilities (RT Adds item)
+router.post('/', authenticate, isRT(), facilitiesController.createFacility);
 
-    if (!nama_fasilitas) {
-      return validationErrorResponse(res, 'Nama fasilitas wajib diisi');
-    }
+// GET /api/facilities (Warga views items)
+router.get('/', authenticate, facilitiesController.getFacilities);
 
-    const result = await pool.query(
-      'INSERT INTO facilities (rt_id, nama_fasilitas, deskripsi, foto_url) VALUES ($1, $2, $3, $4) RETURNING *',
-      [rt_id, nama_fasilitas, deskripsi, foto_url]
-    );
+// PATCH /api/facilities/:id (RT edits item)
+router.patch('/:id', authenticate, isRT(), facilitiesController.updateFacility);
 
-    return createdResponse(res, 'Fasilitas ditambahkan', result.rows[0]);
-  } catch (error) {
-    next(error);
-  }
-});
+// DELETE /api/facilities/:id (RT deletes item)
+router.delete('/:id', authenticate, isRT(), facilitiesController.deleteFacility);
 
-// Get facilities
-router.get('/', authenticate, async (req, res, next) => {
-  try {
-    const { rt_id } = req.query;
-    let query = 'SELECT * FROM facilities WHERE 1=1';
-    const params = [];
 
-    if (rt_id) {
-      query += ' AND rt_id = $1';
-      params.push(rt_id);
-    }
+// --- Reservation Routes ---
+// POST /api/facilities/:id/reserve (Warga books an item)
+router.post('/:id/reserve', authenticate, facilitiesController.createReservation);
 
-    query += ' ORDER BY created_at DESC';
+// GET /api/facilities/reservations/list (RT sees all bookings)
+// Note: Placed before /:id to avoid mistaking 'reservations' as a facility ID in a broader generic route if any existed, though we use different base path anyway
+router.get('/reservations/all', authenticate, isRT(), facilitiesController.getReservations);
 
-    const result = await pool.query(query, params);
-    return successResponse(res, 'Daftar fasilitas', result.rows);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Update facility
-router.patch('/:id', authenticate, isRT(), async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { nama_fasilitas, deskripsi, foto_url } = req.body;
-
-    const result = await pool.query(
-      'UPDATE facilities SET nama_fasilitas = $1, deskripsi = $2, foto_url = $3 WHERE id = $4 RETURNING *',
-      [nama_fasilitas, deskripsi, foto_url, id]
-    );
-
-    if (result.rows.length === 0) {
-      return notFoundResponse(res, 'Fasilitas tidak ditemukan');
-    }
-
-    return successResponse(res, 'Fasilitas diperbarui', result.rows[0]);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Delete facility
-router.delete('/:id', authenticate, isRT(), async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const result = await pool.query('DELETE FROM facilities WHERE id = $1 RETURNING *', [id]);
-
-    if (result.rows.length === 0) {
-      return notFoundResponse(res, 'Fasilitas tidak ditemukan');
-    }
-
-    return successResponse(res, 'Fasilitas dihapus');
-  } catch (error) {
-    next(error);
-  }
-});
+// PATCH /api/facilities/reservations/:id/verify (RT Approves/Rejects booking)
+router.patch('/reservations/:id/verify', authenticate, isRT(), facilitiesController.verifyReservation);
 
 module.exports = router;
 
