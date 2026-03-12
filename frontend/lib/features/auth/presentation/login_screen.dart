@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../widgets/atoms/custom_button.dart';
+import '../../../../widgets/atoms/custom_text_field.dart';
 import '../logic/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -24,13 +26,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login Berhasil!')),
+          const SnackBar(
+            content: Text('Login Berhasil!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
-        // Navigate to Home/Dashboard
-        // Navigator.pushReplacementNamed(context, '/home');
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authProvider.error ?? 'Gagal login')),
+          SnackBar(
+            content: Text(authProvider.error ?? 'Gagal login'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -41,67 +49,110 @@ class _LoginScreenState extends State<LoginScreen> {
     final isLoading = context.watch<AuthProvider>().isLoading;
 
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'RT/RW Digital',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Logo / Header
+                  const Icon(
+                    Icons.home_work_rounded,
+                    size: 80,
                     color: Colors.blueAccent,
                   ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Silakan login untuk mengakses layanan',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
-                ),
-                const SizedBox(height: 48),
-                TextFormField(
-                  controller: _waController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nomor WhatsApp',
-                    prefixIcon: Icon(Icons.phone),
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'RT/RW Digital',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D3142),
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) => 
-                      value == null || value.isEmpty ? 'Masukkan nomor WA' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passController,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Kelola hunian Anda dengan lebih mudah\ndan efisien di satu aplikasi.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
                   ),
-                  obscureText: true,
-                  validator: (value) => 
-                      value == null || value.isEmpty ? 'Masukkan password' : null,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: isLoading ? null : _handleLogin,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.white,
+                  const SizedBox(height: 48),
+
+                  // Inputs
+                  CustomTextField(
+                    controller: _waController,
+                    label: 'Nomor WhatsApp',
+                    hint: 'Contoh: 081234567890',
+                    prefixIcon: Icons.phone_android_rounded,
+                    keyboardType: TextInputType.phone,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Nomor WA wajib diisi';
+                      if (value.length < 10) return 'Nomor WA minimal 10 digit';
+                      return null;
+                    },
                   ),
-                  child: isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('LOGIN', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  CustomTextField(
+                    controller: _passController,
+                    label: 'Password',
+                    hint: 'Masukkan password Anda',
+                    prefixIcon: Icons.lock_outline_rounded,
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Password wajib diisi';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {}, // Lupa password placeholder
+                      child: const Text(
+                        'Lupa Password?',
+                        style: TextStyle(color: Colors.blueAccent),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Login Button
+                  CustomButton(
+                    text: 'MASUK',
+                    onPressed: _handleLogin,
+                    isLoading: isLoading,
+                  ),
+                  
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Belum punya akun? '),
+                      GestureDetector(
+                        onTap: () {}, // Registrasi placeholder
+                        child: const Text(
+                          'Hubungi Pengurus RT',
+                          style: TextStyle(
+                            color: Colors.blueAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
