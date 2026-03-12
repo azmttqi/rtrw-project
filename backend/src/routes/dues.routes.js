@@ -13,6 +13,7 @@ router.post('/settings', authenticate, duesController.createSetting);
 
 // --- Bills ---
 router.post('/bills', authenticate, isRT(), duesController.createBill);
+router.post('/bills/:id/remind', authenticate, isRT(), duesController.sendManualReminder);
 router.get('/bills', authenticate, isRT(), duesController.getBillsByRT);
 
 // --- Payments ---

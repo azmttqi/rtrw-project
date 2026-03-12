@@ -130,6 +130,18 @@ const duesController = {
       if (error.message.includes('tidak ditemukan')) return notFoundResponse(res, error.message);
       next(error);
     }
+  },
+
+  async sendManualReminder(req, res, next) {
+    try {
+      const { id } = req.params;
+      await dueService.sendManualReminder(id);
+      return successResponse(res, 'Pengingat WhatsApp berhasil dikirim');
+    } catch (error) {
+      if (error.message.includes('tidak ditemukan')) return notFoundResponse(res, error.message);
+      if (error.message.includes('sudah lunas')) return validationErrorResponse(res, error.message);
+      next(error);
+    }
   }
 };
 
