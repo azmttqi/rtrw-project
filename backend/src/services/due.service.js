@@ -1,4 +1,6 @@
 const duesRepository = require('../repositories/dues.repository');
+const notificationService = require('./notification.service');
+const familyRepository = require('../repositories/family.repository');
 
 const dueService = {
   // --- Settings ---
@@ -33,7 +35,19 @@ const dueService = {
       throw new Error('Tagihan untuk periode ini sudah ada');
     }
 
-    return await duesRepository.createBill({ family_id, bulan, tahun, nominal });
+    const bill = await duesRepository.createBill({ family_id, bulan, tahun, nominal });
+
+    // Kirim Notifikasi Internal & WA
+    const family = await familyRepository.findById(family_id);
+    if (family) {
+      await notificationService.notifyUser(family.user_id, {
+        title: 'Tagihan Iuran Baru',
+        message: `Tagihan iuran untuk periode ${bulan}/${tahun} sebesar Rp ${nominal} telah diterbitkan.`,
+        sendWA: true
+      });
+    }
+
+    return bill;
   },
 
   async getBillsByRT(rtId, page, limit) {
@@ -91,9 +105,50 @@ const dueService = {
         if (bill) {
             await duesRepository.updateBillStatus(bill.id, 'APPROVED');
         }
+        
+        // Notifikasi ke warga
+        const family = await familyRepository.findById(payment.pembayar_family_id);
+        if (family) {
+          await notificationService.notifyUser(family.user_id, {
+            title: 'Pembayaran Iuran Disetujui',
+            message: `Pembayaran iuran periode ${payment.bulan}/${payment.tahun} telah diverifikasi dan disetujui. Terima kasih.`,
+            sendWA: true
+          });
+        }
+    } else if (status === 'REJECTED' && payment.pembayar_family_id) {
+        // Notifikasi penolakan
+        const family = await familyRepository.findById(payment.pembayar_family_id);
+        if (family) {
+          await notificationService.notifyUser(family.user_id, {
+            title: 'Pembayaran Iuran Ditolak',
+            message: `Pembayaran iuran periode ${payment.bulan}/${payment.tahun} ditolak oleh pengurus. Silakan cek kembali bukti bayar Anda atau hubungi RT.`,
+            sendWA: true
+          });
+        }
     }
 
     return updatedPayment;
+  },
+
+  /**
+   * Mengirimkan pengingat manual melalui WhatsApp
+   */
+  async sendManualReminder(billId) {
+    const bill = await duesRepository.findBillById(billId);
+    if (!bill) throw new Error('Tagihan tidak ditemukan');
+    if (bill.status === 'APPROVED') throw new Error('Tagihan sudah lunas');
+
+    const family = await familyRepository.findById(bill.family_id);
+    if (!family) throw new Error('Data keluarga tidak ditemukan');
+
+    const whatsappService = require('./whatsapp.service');
+    return await whatsappService.sendDueReminder(family.no_wa, {
+        nama: family.nama,
+        jenis: 'Iuran Warga Bulanan',
+        nominal: bill.nominal,
+        bulan: bill.bulan,
+        tahun: bill.tahun
+    });
   }
 };
 

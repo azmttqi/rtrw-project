@@ -45,6 +45,11 @@ const duesRepository = {
     return result.rows[0];
   },
 
+  async findBillById(id) {
+    const result = await pool.query('SELECT * FROM dues_bills WHERE id = $1', [id]);
+    return result.rows[0];
+  },
+
   async findBillsByRT(rtId, { page = 1, limit = 10 }) {
     const offset = (page - 1) * limit;
     const result = await pool.query(
