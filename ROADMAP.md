@@ -42,7 +42,7 @@ Membangun fitur utama pada sisi Backend.
 - [x] **Manajemen Fasilitas**: API untuk peminjaman dan penjadwalan fasilitas publik RT/RW.
 - [x] **Layanan Surat Menyurat**: API untuk request surat pengantar oleh warga dan persetujuan oleh RT/RW.
 
-## Phase 3: Frontend Development (Admin & User Portals)
+## Phase 3: Frontend Development (Admin & User Portals) [/]
 Membangun antarmuka pengguna setelah Backend API stabil.
 
 - [ ] **Frontend Setup**: Inisialisasi proyek Frontend Mobile/Web menggunakan framework Flutter.
