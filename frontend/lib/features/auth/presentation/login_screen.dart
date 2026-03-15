@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../widgets/atoms/custom_button.dart';
 import '../../../../widgets/atoms/custom_text_field.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../logic/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -49,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final isLoading = context.watch<AuthProvider>().isLoading;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -61,30 +62,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo / Header
-                  const Icon(
-                    Icons.home_work_rounded,
-                    size: 80,
-                    color: Colors.blueAccent,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'RT/RW Digital',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2D3142),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Kelola hunian Anda dengan lebih mudah\ndan efisien di satu aplikasi.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                      height: 1.5,
+                  Center(
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      height: 180,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 80,
+                        color: Colors.grey,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 48),
@@ -121,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () {}, // Lupa password placeholder
                       child: const Text(
                         'Lupa Password?',
-                        style: TextStyle(color: Colors.blueAccent),
+                        style: TextStyle(color: AppColors.primaryGreen),
                       ),
                     ),
                   ),
@@ -132,6 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     text: 'MASUK',
                     onPressed: _handleLogin,
                     isLoading: isLoading,
+                    variant: ButtonVariant.primary, 
                   ),
                   
                   const SizedBox(height: 32),
@@ -144,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text(
                           'Hubungi Pengurus RT',
                           style: TextStyle(
-                            color: Colors.blueAccent,
+                            color: AppColors.primaryGreen,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
