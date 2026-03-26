@@ -16,6 +16,12 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _token != null;
+  
+  bool get isAdmin => _user != null && (_user!['role'] == 'RT' || _user!['role'] == 'RW');
+  bool get isRT => _user != null && _user!['role'] == 'RT';
+  bool get isRW => _user != null && _user!['role'] == 'RW';
+  bool get isWarga => _user != null && _user!['role'] == 'WARGA';
+  bool get isVerified => _user != null && _user!['is_verified'] == true;
 
   AuthProvider() {
     checkAuthStatus();
@@ -34,20 +40,41 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<bool> login(String noWa, String password) async {
+    return _handleAuth(() => _authService.login(noWa, password));
+  }
+
+  Future<bool> loginGoogle(String idToken, {String? tokenInvitation}) async {
+    return _handleAuth(() => _authService.registerGoogle(idToken, tokenInvitation: tokenInvitation));
+  }
+
+  Future<bool> registerWarga({
+    required String nama,
+    required String noWa,
+    required String password,
+    required String tokenInvitation,
+  }) async {
+    return _handleAuth(() => _authService.registerWarga(
+          nama: nama,
+          noWa: noWa,
+          password: password,
+          tokenInvitation: tokenInvitation,
+        ));
+  }
+
+  Future<bool> _handleAuth(Future<Map<String, dynamic>> Function() authCall) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final result = await _authService.login(noWa, password);
-      
+      final result = await authCall();
       _token = result['data']['token'];
       _user = result['data']['user'];
-      
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', _token!);
       await prefs.setString('user', json.encode(_user));
-      
+
       _isLoading = false;
       notifyListeners();
       return true;

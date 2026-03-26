@@ -8,15 +8,40 @@ class AuthService {
         'no_wa': noWa,
         'password': password,
       });
-
-      if (response.statusCode == 200) {
-        return response.data;
-      } else {
-        throw Exception(response.data['message'] ?? 'Gagal login');
-      }
+      return response.data;
     } on DioException catch (e) {
-      final message = e.response?.data['message'] ?? 'Terjadi kesalahan koneksi';
-      throw Exception(message);
+      throw Exception(e.response?.data['message'] ?? 'Terjadi kesalahan login');
+    }
+  }
+
+  Future<Map<String, dynamic>> registerGoogle(String idToken, {String? tokenInvitation}) async {
+    try {
+      final response = await apiClient.post('/auth/register-google', data: {
+        'idToken': idToken,
+        'token_invitation': tokenInvitation,
+      });
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Gagal login/registrasi Google');
+    }
+  }
+
+  Future<Map<String, dynamic>> registerWarga({
+    required String nama,
+    required String noWa,
+    required String password,
+    required String tokenInvitation,
+  }) async {
+    try {
+      final response = await apiClient.post('/auth/register', data: {
+        'nama': nama,
+        'no_wa': noWa,
+        'password': password,
+        'token_invitation': tokenInvitation,
+      });
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Gagal registrasi warga');
     }
   }
 }

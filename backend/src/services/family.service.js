@@ -1,4 +1,5 @@
 const familyRepository = require('../repositories/family.repository');
+const userRepository = require('../repositories/user.repository');
 
 const familyService = {
   async getMyFamily(userId) {
@@ -9,7 +10,7 @@ const familyService = {
     return family;
   },
 
-  async createFamily(userId, { rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan }) {
+  async createFamily(userId, { rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan, documents = [] }) {
     if (!no_kk || !rt_id || !tipe_warga || !status_tinggal) {
       throw new Error('Data keluarga tidak lengkap');
     }
@@ -26,6 +27,7 @@ const familyService = {
       tipe_warga,
       status_tinggal,
       status_pernikahan,
+      documents
     });
   },
 
@@ -41,6 +43,13 @@ const familyService = {
     const family = await familyRepository.update(familyId, { status_verifikasi: status });
     if (!family) {
       throw new Error('Keluarga tidak ditemukan');
+    }
+
+    // Sync user verification status
+    if (status === 'APPROVED') {
+      await userRepository.update(family.user_id, { is_verified: true });
+    } else if (status === 'REJECTED') {
+      await userRepository.update(family.user_id, { is_verified: false });
     }
 
     return family;

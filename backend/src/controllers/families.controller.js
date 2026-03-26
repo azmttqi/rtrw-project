@@ -18,8 +18,13 @@ const familiesController = {
   async createFamily(req, res, next) {
     try {
       const { rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan } = req.body;
+      const documents = req.files ? req.files.map(file => ({
+        jenis_dokumen: 'KK/KTP', // Default category, could be more dynamic
+        file_url: `/uploads/documents/${file.filename}`
+      })) : [];
+
       const family = await familyService.createFamily(req.user.id, {
-        rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan
+        rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan, documents
       });
       return createdResponse(res, 'Keluarga berhasil didaftarkan', family);
     } catch (error) {

@@ -1,5 +1,5 @@
 const userRepository = require('../repositories/user.repository');
-const { successResponse, notFoundResponse } = require('../utils/response');
+const { successResponse, errorResponse, validationErrorResponse } = require('../utils/response');
 const { getPaginationMeta } = require('../utils/pagination');
 
 const usersController = {
@@ -19,12 +19,34 @@ const usersController = {
 
   async getUserById(req, res, next) {
     try {
+      const user = await userRepository.findById(req.params.id);
+      if (!user) return errorResponse(res, 'User not found', 404);
+      return successResponse(res, 'User details', user);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async verifyRT(req, res, next) {
+    try {
       const { id } = req.params;
+      const { status, rt_id } = req.body; // status: 'APPROVED' or 'REJECTED'
+
       const user = await userRepository.findById(id);
-      if (!user) {
-        return notFoundResponse(res, 'User not found');
+      if (!user || user.role !== 'RT') {
+        return validationErrorResponse(res, 'User bukan RT atau tidak ditemukan');
       }
-      return successResponse(res, 'User retrieved', user);
+
+      if (status === 'APPROVED') {
+        const updateData = { is_verified: true };
+        if (rt_id) updateData.rt_id = rt_id;
+        
+        const updatedUser = await userRepository.update(id, updateData);
+        return successResponse(res, 'RT berhasil diverifikasi', updatedUser);
+      } else {
+        // Jika ditolak, mungkin hapus atau biarkan unverified
+        return successResponse(res, 'Verifikasi RT ditolak');
+      }
     } catch (error) {
       next(error);
     }

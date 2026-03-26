@@ -15,6 +15,14 @@ const invitationRepository = {
     return result.rows[0];
   },
 
+  async findByNoWaAndRW(no_wa, rw_id) {
+    const result = await pool.query(
+      'SELECT * FROM invitations WHERE no_wa = $1 AND rw_id = $2 AND is_used = false AND expires_at > NOW()',
+      [no_wa, rw_id]
+    );
+    return result.rows[0];
+  },
+
   async findAllByRT(rt_id) {
     const result = await pool.query(
       'SELECT * FROM invitations WHERE rt_id = $1 ORDER BY created_at DESC',
@@ -23,11 +31,19 @@ const invitationRepository = {
     return result.rows;
   },
 
-  async create({ no_wa, rt_id }) {
+  async findAllByRW(rw_id) {
+    const result = await pool.query(
+      'SELECT * FROM invitations WHERE rw_id = $1 ORDER BY created_at DESC',
+      [rw_id]
+    );
+    return result.rows;
+  },
+
+  async create({ no_wa = null, rt_id = null, rw_id = null }) {
     const token = uuidv4();
     const result = await pool.query(
-      `INSERT INTO invitations (no_wa, rt_id, token) VALUES ($1, $2, $3) RETURNING *`,
-      [no_wa, rt_id, token]
+      `INSERT INTO invitations (no_wa, rt_id, rw_id, token) VALUES ($1, $2, $3, $4) RETURNING *`,
+      [no_wa, rt_id, rw_id, token]
     );
     return result.rows[0];
   },
