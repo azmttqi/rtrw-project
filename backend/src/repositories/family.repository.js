@@ -3,7 +3,8 @@ const pool = require('../config/database');
 const familyRepository = {
   async findById(id) {
     const result = await pool.query(
-      `SELECT f.*, u.nama, u.no_wa, u.role 
+      `SELECT f.*, u.nama, u.no_wa, u.role,
+        (SELECT json_agg(d.*) FROM documents d WHERE d.family_id = f.id) as documents
        FROM families f 
        JOIN users u ON f.user_id = u.id 
        WHERE f.id = $1`,
@@ -14,7 +15,8 @@ const familyRepository = {
 
   async findByUserId(userId) {
     const result = await pool.query(
-      `SELECT f.*, u.nama, u.no_wa, u.role 
+      `SELECT f.*, u.nama, u.no_wa, u.role,
+        (SELECT json_agg(d.*) FROM documents d WHERE d.family_id = f.id) as documents
        FROM families f 
        JOIN users u ON f.user_id = u.id 
        WHERE f.user_id = $1`,
@@ -28,14 +30,35 @@ const familyRepository = {
     return result.rows[0];
   },
 
-  async create({ user_id, rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan }) {
-    const result = await pool.query(
-      `INSERT INTO families (user_id, rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan, status_verifikasi) 
-       VALUES ($1, $2, $3, $4, $5, $6, 'PENDING') 
-       RETURNING *`,
-      [user_id, rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan]
-    );
-    return result.rows[0];
+  async create({ user_id, rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan, documents = [] }) {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const resFamily = await client.query(
+        `INSERT INTO families (user_id, rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan, status_verifikasi) 
+         VALUES ($1, $2, $3, $4, $5, $6, 'PENDING') 
+         RETURNING *`,
+        [user_id, rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan]
+      );
+      const family = resFamily.rows[0];
+
+      if (documents.length > 0) {
+        for (const doc of documents) {
+          await client.query(
+            `INSERT INTO documents (family_id, jenis_dokumen, file_url) VALUES ($1, $2, $3)`,
+            [family.id, doc.jenis_dokumen, doc.file_url]
+          );
+        }
+      }
+
+      await client.query('COMMIT');
+      return family;
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
   },
 
   async update(id, { rt_id, no_kk, tipe_warga, status_tinggal, status_pernikahan, status_verifikasi }) {

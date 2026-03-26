@@ -23,11 +23,21 @@ class ApiClient {
       },
       onError: (DioException e, handler) {
         if (e.response?.statusCode == 401) {
-          // Logic logout jika token expired bisa ditambah di sini
+          // Token expired atau tidak valid
+          _handleUnauthorized();
         }
         return handler.next(e);
       },
     ));
+  }
+
+  void _handleUnauthorized() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('user');
+    // Di sini kita bisa menambahkan mekanisme untuk menavigasi ke login
+    // Tapi karena AuthProvider me-watch SharedPreferences (secara tidak langsung),
+    // kita mungkin perlu trigger global event atau Stream.
   }
 
   // Helper methods untuk request yang lebih bersih
@@ -37,6 +47,14 @@ class ApiClient {
 
   Future<Response> post(String path, {dynamic data}) {
     return dio.post(path, data: data);
+  }
+
+  Future<Response> patch(String path, {dynamic data}) {
+    return dio.patch(path, data: data);
+  }
+
+  Future<Response> delete(String path) {
+    return dio.delete(path);
   }
 }
 

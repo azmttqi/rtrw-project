@@ -4,6 +4,7 @@ import '../../../../widgets/atoms/custom_button.dart';
 import '../../../../widgets/atoms/custom_text_field.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../logic/auth_provider.dart';
+import 'register_rw_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -120,8 +121,78 @@ class _LoginScreenState extends State<LoginScreen> {
                     isLoading: isLoading,
                     variant: ButtonVariant.primary, 
                   ),
+
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('ATAU', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      ),
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  const Center(
+                    child: Text(
+                      'Khusus Pengurus (RT/RW)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            final authProvider = context.read<AuthProvider>();
+                            await authProvider.loginGoogle('mock_rw');
+                          },
+                          icon: const Icon(Icons.admin_panel_settings, color: Colors.blue),
+                          label: const Text('Admin RW'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: BorderSide(color: Colors.grey.shade300),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            final authProvider = context.read<AuthProvider>();
+                            await authProvider.loginGoogle('mock_rt');
+                          },
+                          icon: const Icon(Icons.person_pin, color: Colors.green),
+                          label: const Text('Admin RT'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: BorderSide(color: Colors.grey.shade300),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const RegisterRwScreen()),
+                      );
+                    },
+                    child: const Text(
+                      'Daftar Akun RW Baru (Mandiri)',
+                      style: TextStyle(color: AppColors.primaryGreen),
+                    ),
+                  ),
                   
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

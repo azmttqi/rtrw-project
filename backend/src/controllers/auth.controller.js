@@ -32,6 +32,36 @@ const authController = {
     }
   },
 
+  async registerGoogle(req, res, next) {
+    try {
+      const { idToken, token_invitation } = req.body;
+
+      if (!idToken) {
+        return validationErrorResponse(res, 'Google ID Token wajib diisi');
+      }
+
+      const result = await authService.registerGoogle({ idToken, token_invitation });
+
+      return successResponse(res, 'Login/Registrasi Google berhasil', {
+        user: {
+          id: result.user.id,
+          nama: result.user.nama,
+          email: result.user.email,
+          role: result.user.role,
+          rt_id: result.user.rt_id,
+          rw_id: result.user.rw_id,
+          is_verified: result.user.is_verified,
+        },
+        token: result.token,
+      });
+    } catch (error) {
+      if (error.message.includes('Invalid or expired invitation')) {
+        return validationErrorResponse(res, error.message);
+      }
+      next(error);
+    }
+  },
+
   async login(req, res, next) {
     try {
       const { no_wa, password } = req.body;

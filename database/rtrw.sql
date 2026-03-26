@@ -57,8 +57,10 @@ CREATE TABLE rts (
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     nama VARCHAR(150),
-    no_wa VARCHAR(20) UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
+    no_wa VARCHAR(20) UNIQUE, -- Menjadi nullable untuk mendukung login Google (RT/RW)
+    email VARCHAR(150) UNIQUE, -- Ditambahkan untuk login Google
+    google_id VARCHAR(255) UNIQUE, -- Ditambahkan untuk login Google
+    password_hash TEXT, -- Menjadi nullable untuk akun Google
     role role_akun NOT NULL,
 
     rt_id INT REFERENCES rts(id) ON DELETE SET NULL,
@@ -74,13 +76,17 @@ CREATE TABLE users (
 
 CREATE TABLE invitations (
     id SERIAL PRIMARY KEY,
-    no_wa VARCHAR(20) NOT NULL,
+    no_wa VARCHAR(20), -- Menjadi nullable untuk mendukung RT via Google (Link saja)
     rt_id INT REFERENCES rts(id) ON DELETE CASCADE,
+    rw_id INT REFERENCES rws(id) ON DELETE CASCADE, -- Tambahkan untuk undangan RT dari RW
     token VARCHAR(255) NOT NULL,
     is_used BOOLEAN DEFAULT FALSE,
-    expires_at TIMESTAMP DEFAULT (NOW() + INTERVAL '2 days'),
+    expires_at TIMESTAMP DEFAULT (NOW() + INTERVAL '7 days'), -- Diperpanjang menjadi 7 hari
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_invitation_per_rt UNIQUE (no_wa, rt_id)
+    CONSTRAINT chk_invitation_target CHECK (
+        (rt_id IS NOT NULL AND rw_id IS NULL) OR
+        (rt_id IS NULL AND rw_id IS NOT NULL)
+    )
 );
 
 -- =====================================================
