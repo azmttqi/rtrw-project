@@ -13,11 +13,20 @@ const announcementRepository = {
 
   async getAnnouncements(filters, page, limit) {
     const offset = (page - 1) * limit;
-    const { rt_id } = filters;
+    const { rt_id, rw_id } = filters;
 
     let query = 'SELECT a.*, u.nama as pembuat_nama FROM announcements a JOIN users u ON a.pembuat_user_id = u.id WHERE 1=1';
     const params = [];
     let paramIndex = 1;
+
+    if (rw_id) {
+      query += ` AND u.rw_id = $${paramIndex}`;
+      params.push(rw_id);
+      paramIndex++;
+    } else {
+      // Security: if no rw_id is provided, return nothing (protect against null rw_id in users table)
+      query += ` AND 1=0`;
+    }
 
     if (rt_id) {
       query += ` AND (a.target = 'SEMUA_RW' OR a.target = 'SEMUA_RT' OR a.target_rt_id = $${paramIndex})`;
@@ -31,13 +40,23 @@ const announcementRepository = {
     const result = await pool.query(query, params);
     
     // Count Query Needs matching logic
-    let countQuery = 'SELECT COUNT(*) FROM announcements a WHERE 1=1';
+    let countQuery = 'SELECT COUNT(*) FROM announcements a JOIN users u ON a.pembuat_user_id = u.id WHERE 1=1';
     const countParams = [];
     let countParamIndex = 1;
+
+    if (rw_id) {
+      countQuery += ` AND u.rw_id = $${countParamIndex}`;
+      countParams.push(rw_id);
+      countParamIndex++;
+    } else {
+      // Force empty if not provided (non-admin)
+      countQuery += ` AND 1=0`;
+    }
 
     if (rt_id) {
       countQuery += ` AND (a.target = 'SEMUA_RW' OR a.target = 'SEMUA_RT' OR a.target_rt_id = $${countParamIndex})`;
       countParams.push(rt_id);
+      countParamIndex++;
     }
 
     const countResult = await pool.query(countQuery, countParams);

@@ -22,7 +22,13 @@ const announcementsController = {
 
   async getAnnouncements(req, res, next) {
     try {
-      const { rt_id, rw_id, page = 1, limit = 10 } = req.query;
+      const { rt_id, page = 1, limit = 10 } = req.query;
+      // Enforce rw_id for non-admin users
+      let rw_id = req.user.rw_id;
+      if (req.user.role === 'ADMIN') {
+         // Allow admin to see all via query or just no filter
+         rw_id = req.query.rw_id || null;
+      }
       const filters = { rt_id, rw_id };
 
       const result = await announcementService.getAnnouncements(filters, page, limit);

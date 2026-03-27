@@ -19,10 +19,10 @@ class Announcement {
     return Announcement(
       id: json['id'],
       title: json['judul'] ?? json['title'],
-      content: json['isi'] ?? json['content'],
+      content: json['konten'] ?? json['isi'] ?? json['content'],
       category: json['kategori'],
       createdAt: DateTime.parse(json['created_at']),
-      authorName: json['author_name'] ?? 'Admin',
+      authorName: json['pembuat_nama'] ?? json['author_name'] ?? 'Admin',
     );
   }
 }

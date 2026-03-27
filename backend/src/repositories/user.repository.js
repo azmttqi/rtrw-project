@@ -24,12 +24,23 @@ const userRepository = {
     return result.rows[0];
   },
 
-  async create({ nama, no_wa = null, email = null, google_id = null, password_hash = null, role, rt_id = null, rw_id = null }) {
+  async findByIdentifier(identifier) {
+    const result = await pool.query(
+      'SELECT * FROM users WHERE no_wa = $1 OR email = $2',
+      [identifier, identifier]
+    );
+    return result.rows[0];
+  },
+
+  async create({ nama, no_wa = null, email = null, google_id = null, password_hash = null, role, rt_id = null, rw_id = null, is_verified = null }) {
+    // If is_verified is provided, use it. Otherwise use role/google logic.
+    const final_verified = is_verified !== null ? is_verified : (role === 'WARGA' ? false : (google_id ? false : true));
+    
     const result = await pool.query(
       `INSERT INTO users (nama, no_wa, email, google_id, password_hash, role, rt_id, rw_id, is_verified) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
        RETURNING id, nama, no_wa, email, google_id, role, rt_id, rw_id, is_verified, created_at`,
-      [nama, no_wa, email, google_id, password_hash, role, rt_id, rw_id, role === 'WARGA' ? false : (google_id ? false : true)]
+      [nama, no_wa, email, google_id, password_hash, role, rt_id, rw_id, final_verified]
     );
     return result.rows[0];
   },

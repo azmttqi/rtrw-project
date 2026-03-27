@@ -1,0 +1,42 @@
+[
+  {
+    "column_name": "id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "pembayar_family_id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "pembayar_rt_id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "bulan",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "tahun",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "nominal",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "metode_bayar",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "bukti_bayar_url",
+    "data_type": "text"
+  },
+  {
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "column_name": "dibayar_pada",
+    "data_type": "timestamp without time zone"
+  }
+]
