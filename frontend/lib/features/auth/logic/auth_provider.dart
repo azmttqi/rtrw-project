@@ -39,8 +39,8 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> login(String noWa, String password) async {
-    return _handleAuth(() => _authService.login(noWa, password));
+  Future<bool> login(String identifier, String password) async {
+    return _handleAuth(() => _authService.login(identifier, password));
   }
 
   Future<bool> loginGoogle(String idToken, {String? tokenInvitation}) async {
@@ -59,6 +59,49 @@ class AuthProvider with ChangeNotifier {
           password: password,
           tokenInvitation: tokenInvitation,
         ));
+  }
+
+  Future<bool> registerRW({
+    required String nama,
+    required String noWa,
+    required String email,
+    required String password,
+    required String nomorRw,
+    String? alamat,
+    String? namaWilayah,
+  }) async {
+    return _handleAuth(() => _authService.registerRW(
+          nama: nama,
+          noWa: noWa,
+          email: email,
+          password: password,
+          nomorRw: nomorRw,
+          alamat: alamat,
+          namaWilayah: namaWilayah,
+        ));
+  }
+
+  Future<bool> verifyEmail(String identifier, String otp) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _authService.verifyEmail(identifier, otp);
+      if (_user != null) {
+        _user!['is_verified'] = true;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user', json.encode(_user));
+      }
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<bool> _handleAuth(Future<Map<String, dynamic>> Function() authCall) async {

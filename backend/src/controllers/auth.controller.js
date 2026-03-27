@@ -4,13 +4,16 @@ const { successResponse, createdResponse, errorResponse, validationErrorResponse
 const authController = {
   async register(req, res, next) {
     try {
-      const { nama, no_wa, password, token_invitation } = req.body;
+      const { nama, no_wa, email, password, role, token_invitation, nomor_rw, alamat, nama_wilayah } = req.body;
 
       if (!nama || !no_wa || !password) {
         return validationErrorResponse(res, 'Nama, nomor WhatsApp, dan password wajib diisi');
       }
 
-      const result = await authService.register({ nama, no_wa, password, token_invitation });
+      const result = await authService.register({ 
+        nama, no_wa, email, password, role, token_invitation, 
+        nomor_rw, alamat, nama_wilayah 
+      });
 
       return createdResponse(res, 'Registrasi berhasil', {
         user: {
@@ -18,6 +21,7 @@ const authController = {
           nama: result.user.nama,
           no_wa: result.user.no_wa,
           role: result.user.role,
+          is_verified: result.user.is_verified,
         },
         token: result.token,
       });
@@ -80,6 +84,7 @@ const authController = {
           role: result.user.role,
           rt_id: result.user.rt_id,
           rw_id: result.user.rw_id,
+          is_verified: result.user.is_verified,
         },
         token: result.token,
       });
@@ -107,6 +112,23 @@ const authController = {
       return successResponse(res, 'Profile updated', user);
     } catch (error) {
       next(error);
+    }
+  },
+
+  async verifyEmail(req, res, next) {
+    try {
+      const { identifier, otp } = req.body;
+      if (!identifier || !otp) {
+        return validationErrorResponse(res, 'Identifier and OTP are required');
+      }
+      const user = await authService.verifyEmail({ identifier, otp });
+      return successResponse(res, 'Email berhasil diverifikasi', {
+        id: user.id,
+        nama: user.nama,
+        is_verified: user.is_verified
+      });
+    } catch (error) {
+      return validationErrorResponse(res, error.message);
     }
   },
 };

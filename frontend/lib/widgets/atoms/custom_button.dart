@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
-enum ButtonVariant { primary, secondary, outline, text }
+enum ButtonVariant { primary, secondary, outline, text, google }
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -9,7 +9,10 @@ class CustomButton extends StatelessWidget {
   final bool isLoading;
   final ButtonVariant variant;
   final IconData? icon;
+  final Widget? customIcon;
+  final bool iconRight;
   final double width;
+  final bool useGradient;
 
   const CustomButton({
     super.key,
@@ -18,13 +21,31 @@ class CustomButton extends StatelessWidget {
     this.isLoading = false,
     this.variant = ButtonVariant.primary,
     this.icon,
+    this.customIcon,
+    this.iconRight = false,
     this.width = double.infinity,
+    this.useGradient = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    bool isPrimary = variant == ButtonVariant.primary;
+
+    return Container(
       width: width,
+      decoration: useGradient && isPrimary && onPressed != null
+          ? BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryGreen.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            )
+          : null,
       child: _buildButton(context),
     );
   }
@@ -61,10 +82,24 @@ class CustomButton extends StatelessWidget {
       );
     }
 
+    if (variant == ButtonVariant.google) {
+      return ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: AppColors.inputBackground,
+          foregroundColor: AppColors.textPrimaryLight,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: _buildContent(context, AppColors.textPrimaryLight),
+      );
+    }
+
     // Primary & Secondary
-    final bgColor = variant == ButtonVariant.primary 
-        ? AppColors.primaryGreen 
-        : AppColors.primaryYellow;
+    final bgColor = useGradient ? Colors.transparent : (variant == ButtonVariant.primary ? AppColors.primaryGreen : AppColors.primaryYellow);
     
     final fgColor = variant == ButtonVariant.primary 
         ? Colors.white 
@@ -76,10 +111,11 @@ class CustomButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         backgroundColor: bgColor,
         foregroundColor: fgColor,
+        shadowColor: useGradient ? Colors.transparent : null,
+        elevation: useGradient ? 0 : (variant == ButtonVariant.primary ? 2 : 0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        elevation: variant == ButtonVariant.primary ? 2 : 0,
       ),
       child: _buildContent(context, fgColor),
     );
@@ -99,31 +135,35 @@ class CustomButton extends StatelessWidget {
       );
     }
 
-    if (icon != null) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      );
+    List<Widget> children = [];
+    
+    if (customIcon != null || icon != null) {
+      final iconWidget = customIcon ?? Icon(icon, size: 20);
+      if (iconRight) {
+        children.add(Text(
+          text,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ));
+        children.add(const SizedBox(width: 8));
+        children.add(iconWidget);
+      } else {
+        children.add(iconWidget);
+        children.add(const SizedBox(width: 8));
+        children.add(Text(
+          text,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ));
+      }
+    } else {
+      children.add(Text(
+        text,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ));
     }
 
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: children,
     );
   }
 }

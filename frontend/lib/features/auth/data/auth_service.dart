@@ -2,10 +2,10 @@ import 'package:dio/dio.dart';
 import '../../../core/api_client.dart';
 
 class AuthService {
-  Future<Map<String, dynamic>> login(String noWa, String password) async {
+  Future<Map<String, dynamic>> login(String identifier, String password) async {
     try {
       final response = await apiClient.post('/auth/login', data: {
-        'no_wa': noWa,
+        'no_wa': identifier, // Backend findByIdentifier checks both email & wa
         'password': password,
       });
       return response.data;
@@ -42,6 +42,44 @@ class AuthService {
       return response.data;
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Gagal registrasi warga');
+    }
+  }
+
+  Future<Map<String, dynamic>> registerRW({
+    required String nama,
+    required String noWa,
+    required String email,
+    required String password,
+    required String nomorRw,
+    String? alamat,
+    String? namaWilayah,
+  }) async {
+    try {
+      final response = await apiClient.post('/auth/register', data: {
+        'nama': nama,
+        'no_wa': noWa,
+        'email': email,
+        'password': password,
+        'role': 'RW',
+        'nomor_rw': nomorRw,
+        'alamat': alamat,
+        'nama_wilayah': namaWilayah,
+      });
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Gagal registrasi RW');
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyEmail(String identifier, String otp) async {
+    try {
+      final response = await apiClient.post('/auth/verify-email', data: {
+        'identifier': identifier,
+        'otp': otp,
+      });
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Gagal memverifikasi email');
     }
   }
 }

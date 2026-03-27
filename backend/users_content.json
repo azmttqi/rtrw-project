@@ -1,0 +1,16 @@
+[
+  {
+    "id": 7,
+    "nama": "Bapak RW Iwan",
+    "role": "RW",
+    "rw_id": 1,
+    "rt_id": 1
+  },
+  {
+    "id": 8,
+    "nama": "Amanda",
+    "role": "RW",
+    "rw_id": null,
+    "rt_id": null
+  }
+]

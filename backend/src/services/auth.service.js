@@ -10,14 +10,28 @@ const invitationRepository = require('../repositories/invitation.repository');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const authService = {
-  async register({ nama, no_wa, password, token_invitation }) {
-    // ... existing logic but optimized for repo updates ...
+  async register({ nama, no_wa, email = null, password, role = 'RT', token_invitation, nomor_rw, alamat, nama_wilayah }) {
+    // Check if user already exists by NoWa or Email
     const existingUser = await userRepository.findByNoWa(no_wa);
     if (existingUser) throw new Error('Nomor WhatsApp already registered');
 
+    if (email) {
+      const existingEmail = await userRepository.findByEmail(email);
+      if (existingEmail) throw new Error('Email already registered');
+    }
+
     let rt_id = null;
     let rw_id = null;
-    let role = 'RT'; // Default if no token (but register without token should be discouraged if using Google)
+    let finalRole = role;
+
+    if (role === 'RW' && !token_invitation) {
+      if (!nomor_rw) throw new Error('Nomor RW wajib diisi untuk pendaftaran RW');
+      const rwRes = await pool.query(
+        'INSERT INTO rws (nomor_rw, nama_wilayah, alamat) VALUES ($1, $2, $3) RETURNING id',
+        [nomor_rw, nama_wilayah, alamat]
+      );
+      rw_id = rwRes.rows[0].id;
+    }
 
     if (token_invitation) {
       const invitation = await invitationRepository.findByToken(token_invitation);
@@ -32,13 +46,20 @@ const authService = {
 
       rt_id = invitation.rt_id;
       rw_id = invitation.rw_id;
-      role = rt_id ? 'WARGA' : 'RT';
+      finalRole = rt_id ? 'WARGA' : 'RT';
       await invitationRepository.markAsUsed(token_invitation);
     }
 
     const password_hash = await bcrypt.hash(password, 10);
     const user = await userRepository.create({
-      nama, no_wa, password_hash, role, rt_id, rw_id
+      nama, 
+      no_wa, 
+      email, 
+      password_hash, 
+      role: finalRole, 
+      rt_id, 
+      rw_id,
+      is_verified: finalRole === 'RW' ? false : (finalRole === 'WARGA' ? false : true) // RW needs email verification
     });
 
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
@@ -109,7 +130,8 @@ const authService = {
   },
 
   async login({ no_wa, password }) {
-    const user = await userRepository.findByNoWa(no_wa);
+    // no_wa here can be email or wa
+    const user = await userRepository.findByIdentifier(no_wa);
     if (!user) {
       throw new Error('Invalid credentials');
     }
@@ -137,6 +159,20 @@ const authService = {
   async updateProfile(userId, { nama }) {
     const user = await userRepository.update(userId, { nama });
     return user;
+  },
+
+  async verifyEmail({ identifier, otp }) {
+    // Mock OTP verification logic
+    // In production, we'd check against a redis/db stored OTP
+    if (otp !== '123456') {
+      throw new Error('Kode verifikasi tidak valid atau kedaluwarsa');
+    }
+
+    const user = await userRepository.findByIdentifier(identifier);
+    if (!user) throw new Error('Pengguna tidak ditemukan');
+
+    const updatedUser = await userRepository.update(user.id, { is_verified: true });
+    return updatedUser;
   },
 };
 

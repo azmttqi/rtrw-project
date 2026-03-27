@@ -7,8 +7,27 @@ class AnnouncementService {
       final response = await apiClient.get('/announcements');
       
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'];
-        return data.map((json) => Announcement.fromJson(json)).toList();
+        final dynamic body = response.data;
+        List<dynamic> listData = [];
+        
+        if (body is Map) {
+          final dynamic dataField = body['data'];
+          if (dataField is List) {
+            listData = dataField;
+          } else if (dataField is Map) {
+             if (dataField['announcements'] is List) {
+               listData = dataField['announcements'];
+             } else if (dataField['data'] is List) {
+               listData = dataField['data'];
+             }
+          } else if (body['announcements'] is List) {
+            listData = body['announcements'];
+          }
+        } else if (body is List) {
+          listData = body;
+        }
+        
+        return listData.map((json) => Announcement.fromJson(json)).toList();
       } else {
         throw Exception('Gagal mengambil pengumuman');
       }
