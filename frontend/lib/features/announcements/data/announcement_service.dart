@@ -36,12 +36,22 @@ class AnnouncementService {
     }
   }
 
-  Future<void> createAnnouncement(String title, String content, String? category) async {
+  Future<void> createAnnouncement({
+    required String title,
+    required String content,
+    required String target,
+    String? fotoUrl,
+    bool isKegiatan = false,
+    String? tanggalKegiatan,
+  }) async {
     try {
       await apiClient.post('/announcements', data: {
         'judul': title,
-        'isi': content,
-        'kategori': category,
+        'konten': content,
+        'target': target,
+        if (fotoUrl != null && fotoUrl.isNotEmpty) 'foto_url': fotoUrl,
+        'is_kegiatan': isKegiatan,
+        if (tanggalKegiatan != null) 'tanggal_kegiatan': tanggalKegiatan,
       });
     } catch (e) {
       throw Exception('Gagal membuat pengumuman: $e');

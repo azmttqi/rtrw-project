@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../auth/logic/auth_provider.dart';
+import '../data/inbox_service.dart';
+import '../../announcements/presentation/widgets/announcement_detail_modal.dart';
 
 class InboxScreen extends StatefulWidget {
   const InboxScreen({super.key});
@@ -10,354 +13,593 @@ class InboxScreen extends StatefulWidget {
   State<InboxScreen> createState() => _InboxScreenState();
 }
 
-class _InboxScreenState extends State<InboxScreen> {
-  String _selectedCategory = 'Semua';
+class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final InboxService _service = InboxService();
 
-  List<Map<String, dynamic>> _getCategories(bool isRW) {
-    if (isRW) {
-      return [
-        {'name': 'Semua', 'count': null},
-        {'name': 'Keuangan RT', 'count': null},
-        {'name': 'Koordinasi', 'count': null},
-        {'name': 'Warga', 'count': null},
-      ];
-    } else {
-      return [
-        {'name': 'Semua', 'count': null},
-        {'name': 'Aspirasi', 'count': null},
-        {'name': 'Permohonan', 'count': null},
-        {'name': 'RW 08', 'count': null},
-      ];
+  List<Map<String, dynamic>> _duesNotifs = [];
+  List<Map<String, dynamic>> _announcements = [];
+  List<Map<String, dynamic>> _letters = [];
+
+  bool _loadingDues = true;
+  bool _loadingAnnouncements = true;
+  bool _loadingLetters = true;
+
+  String? _errorDues;
+  String? _errorAnnouncements;
+  String? _errorLetters;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadAll());
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAll() async {
+    final token = context.read<AuthProvider>().token ?? '';
+    _fetchDues(token);
+    _fetchAnnouncements(token);
+    _fetchLetters(token);
+  }
+
+  Future<void> _fetchDues(String token) async {
+    setState(() { _loadingDues = true; _errorDues = null; });
+    try {
+      final data = await _service.getDuesNotifications(token);
+      setState(() { _duesNotifs = data; _loadingDues = false; });
+    } catch (e) {
+      setState(() { _errorDues = e.toString(); _loadingDues = false; });
+    }
+  }
+
+  Future<void> _fetchAnnouncements(String token) async {
+    setState(() { _loadingAnnouncements = true; _errorAnnouncements = null; });
+    try {
+      final data = await _service.getAnnouncements(token);
+      setState(() { _announcements = data; _loadingAnnouncements = false; });
+    } catch (e) {
+      setState(() { _errorAnnouncements = e.toString(); _loadingAnnouncements = false; });
+    }
+  }
+
+  Future<void> _fetchLetters(String token) async {
+    setState(() { _loadingLetters = true; _errorLetters = null; });
+    try {
+      final data = await _service.getLetterInbox(token);
+      setState(() { _letters = data; _loadingLetters = false; });
+    } catch (e) {
+      setState(() { _errorLetters = e.toString(); _loadingLetters = false; });
+    }
+  }
+
+  Future<void> _verifyLetter(int letterId, String status) async {
+    final token = context.read<AuthProvider>().token ?? '';
+    try {
+      await _service.verifyLetter(token, letterId, status);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(status == 'APPROVED' ? 'Surat telah disetujui' : 'Surat telah ditolak'),
+          backgroundColor: status == 'APPROVED' ? AppColors.primaryGreen : Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      _fetchLetters(token);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal: ${e.toString()}'), backgroundColor: Colors.red),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
-    final categories = _getCategories(auth.isRW);
-
+    final auth = context.watch<AuthProvider>();
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            Text(
-              auth.isRW ? 'PUSAT INFORMASI' : 'KOTAK MASUK KETUA RT',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryGreen.withOpacity(0.8),
-                letterSpacing: 1.2,
-              ),
-            ),
-            if (auth.isRT) ...[
-              const SizedBox(height: 8),
-              const Text(
-                'Pantau aspirasi warga dan instruksi koordinasi wilayah dalam satu pintu digital.',
-                style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.4),
-              ),
-            ],
-            const SizedBox(height: 24),
-
-            // Summary Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryCard(
-                    icon: auth.isRW ? Icons.mail_outline_rounded : Icons.pending_actions_rounded,
-                    label: auth.isRW ? 'UNREAD' : 'STATUS TINDAK LANJUT',
-                    value: auth.isRW ? '12 Pesan' : '85%',
-                    isDark: false,
-                    showProgress: auth.isRT,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    auth.isRW ? 'PUSAT KOORDINASI' : 'KOTAK MASUK',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryGreen.withOpacity(0.8),
+                      letterSpacing: 1.5,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildSummaryCard(
-                    icon: auth.isRW ? Icons.bolt_rounded : Icons.emoji_events_outlined,
-                    label: auth.isRW ? 'URGENT' : 'TARGET RT PINTAR',
-                    value: auth.isRW ? '3 Laporan' : 'LEVEL 4',
-                    isDark: true,
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Inbox',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.textPrimaryLight),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            // Filters
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: categories.map((cat) => _buildFilterChip(cat['name'] as String)).toList(),
+                  const SizedBox(height: 4),
+                  Text(
+                    auth.isRW
+                        ? 'Pantau keuangan RT, pengumuman, dan surat menyurat.'
+                        : 'Pantau iuran warga, pengumuman, dan permohonan surat.',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.4),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // Message List
-            if (auth.isRW) ...[
-              _buildMessageItem(
-                title: 'Laporan Keuangan RT 04',
-                sender: 'Bapak Rahardi (Ketua RT 04)',
-                snippet: 'Mohon izin Pak RW, berikut kami lampirkan rekapitulasi iuran warga RT...',
-                time: '10:45 AM',
-                statusColor: Colors.redAccent,
-                icon: Icons.assignment_outlined,
-                actions: [Icons.archive_outlined, Icons.reply_rounded],
-              ),
-              const SizedBox(height: 16),
-              _buildMessageItem(
-                title: 'Koordinasi HUT RI',
-                sender: 'Panitia 17-an (Sdr. Dimas)',
-                snippet: 'Update progres lomba: Lapangan bulutangkis sudah siap digunakan...',
-                time: '08:12 AM',
-                statusColor: Colors.green,
-                icon: Icons.celebration_outlined,
-                actions: [Icons.star_outline_rounded, Icons.ios_share_rounded],
-              ),
-            ] else ...[
-              _buildMessageItem(
-                title: 'Pengajuan Surat Domisili',
-                sender: 'Bp. Ahmad (Blok C-12)',
-                snippet: 'Selamat siang Pak RT, saya ingin mengajukan surat domisili untuk...',
-                time: '09:30 AM',
-                statusColor: Colors.orangeAccent,
-                icon: Icons.description_outlined,
-                actions: [Icons.check_circle_outline_rounded, Icons.close_rounded],
-              ),
-              const SizedBox(height: 16),
-              _buildMessageItem(
-                title: 'Aspirasi: Perbaikan Lampu Gg. 3',
-                sender: 'Ibu Siti (Warga RT 04)',
-                snippet: 'Pak RT, lampu jalan di depan rumah no 42 mati sudah 3 hari...',
-                time: '08:15 AM',
-                statusColor: AppColors.primaryGreen,
-                icon: Icons.lightbulb_outline_rounded,
-                actions: [Icons.reply_rounded],
-              ),
-              const SizedBox(height: 16),
-              _buildMessageItem(
-                title: 'Instruksi: Kerja Bakti Serentak',
-                sender: 'Ketua RW 08 (Bapak Heru)',
-                snippet: 'Diharapkan seluruh RT dapat menggerakkan warganya pada hari Minggu...',
-                time: 'Kemarin',
-                statusColor: Colors.blueAccent,
-                icon: Icons.campaign_outlined,
-                isRead: true,
-                actions: [Icons.priority_high_rounded],
-              ),
-            ],
-            const SizedBox(height: 16),
-            _buildMessageItem(
-              title: auth.isRW ? 'Pengumuman Kerja Bakti RW' : 'Konfirmasi Iuran Keamanan',
-              sender: auth.isRW ? 'Sekretaris RW (Ibu Maya)' : 'Sdr. Rizky (Bendahara)',
-              snippet: auth.isRW ? 'Draft pengumuman untuk seluruh RT sudah siap dipublikasikan...' : 'Pak, iuran keamanan Blok B sudah terkumpul 100%...',
-              time: 'Kemarin',
-              statusColor: AppColors.primaryGreen,
-              icon: auth.isRW ? Icons.campaign_outlined : Icons.account_balance_wallet_outlined,
-              isRead: true,
-              actions: [Icons.check_circle_outline_rounded],
             ),
             const SizedBox(height: 16),
-            _buildMessageItem(
-              title: 'Surat Pengantar - RT 02',
-              sender: 'Ibu Anita (Bendahara RT 02)',
-              snippet: 'Ada pengajuan surat keterangan domisili dari Warga (Bp. Slamet). Mohon...',
-              time: 'Kemarin',
-              statusColor: Colors.orangeAccent,
-              icon: Icons.description_outlined,
-              actions: [Icons.file_download_outlined],
+
+            // TabBar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.shade200, width: 1),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicator: BoxDecoration(
+                    color: AppColors.primaryGreen,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryGreen.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.grey.shade500,
+                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  dividerColor: Colors.transparent,
+                  tabs: const [
+                    Tab(text: 'Keuangan'),
+                    Tab(text: 'Pengumuman'),
+                    Tab(text: 'Surat'),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 80), // Space for FAB
+            const SizedBox(height: 16),
+
+            // Tab Content
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildDuesTab(),
+                  _buildAnnouncementsTab(),
+                  _buildLettersTab(auth),
+                ],
+              ),
+            ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: AppColors.primaryGreen,
-        child: const Icon(Icons.edit_note_rounded, color: Colors.white, size: 28),
       ),
     );
   }
 
-  Widget _buildSummaryCard({
-    required IconData icon,
-    required String label,
-    required String value,
-    required bool isDark,
-    bool showProgress = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.primaryGreen.withOpacity(0.9) : const Color(0xFFF1F5F1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: isDark ? Colors.white : AppColors.primaryGreen, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white.withOpacity(0.7) : Colors.grey,
-                    letterSpacing: 0.5,
+  // ────────────────────────────────────────────────
+  // TAB 1: KEUANGAN
+  // ────────────────────────────────────────────────
+  Widget _buildDuesTab() {
+    if (_loadingDues) return const Center(child: CircularProgressIndicator());
+    if (_errorDues != null) return _buildError(_errorDues!, () => _fetchDues(context.read<AuthProvider>().token ?? ''));
+    if (_duesNotifs.isEmpty) return _buildEmpty('Belum ada data keuangan.');
+
+    return RefreshIndicator(
+      onRefresh: () => _fetchDues(context.read<AuthProvider>().token ?? ''),
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+        itemCount: _duesNotifs.length,
+        itemBuilder: (context, index) {
+          final item = _duesNotifs[index];
+          final status = item['status'] as String? ?? 'BELUM_BAYAR';
+          final isLunas = status == 'LUNAS';
+          final isUrgent = status == 'HAMPIR_JATUH_TEMPO';
+
+          Color statusColor = isLunas ? AppColors.primaryGreen
+              : isUrgent ? Colors.orangeAccent
+              : Colors.redAccent;
+          IconData statusIcon = isLunas ? Icons.check_circle_outline_rounded
+              : isUrgent ? Icons.warning_amber_rounded
+              : Icons.cancel_outlined;
+          String statusLabel = isLunas ? 'LUNAS'
+              : isUrgent ? 'HAMPIR JATUH TEMPO'
+              : 'BELUM BAYAR';
+
+          final String nama = item['nama_ketua_rt'] ?? item['nama_kepala_keluarga'] ?? '-';
+          final String sub = item['nomor_rt'] != null
+              ? 'RT ${item['nomor_rt']}'
+              : 'KK: ${item['no_kk'] ?? '-'}';
+          final num nominal = item['nominal'] ?? 0;
+          final int bulan = item['bulan'] ?? 0;
+          final int tahun = item['tahun'] ?? 0;
+          final int? sisaHari = item['hari_tersisa'] as int?;
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
+            ),
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  Container(
+                    width: 5,
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(18), bottomLeft: Radius.circular(18)),
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(statusIcon, color: statusColor, size: 16),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: statusColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(statusLabel, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10)),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                _bulanName(bulan) + ' $tahun',
+                                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(nama, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                          Text(sub, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Rp ${NumberFormat('#,###', 'id').format(nominal)}',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight),
+                              ),
+                              if (!isLunas && sisaHari != null)
+                                Text(
+                                  sisaHari >= 0 ? 'Jatuh tempo: $sisaHari hari lagi' : 'Terlambat ${-sisaHari} hari',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: sisaHari < 0 ? Colors.red : Colors.orange,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              if (isLunas && item['dibayar_pada'] != null)
+                                Text(
+                                  'Bayar: ${item['dibayar_pada'].toString().split('T')[0]}',
+                                  style: TextStyle(fontSize: 11, color: AppColors.primaryGreen),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : AppColors.textPrimaryLight,
             ),
-          ),
-          if (showProgress) ...[
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: const LinearProgressIndicator(
-                value: 0.85,
-                backgroundColor: Colors.white,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
-                minHeight: 3,
+          );
+        },
+      ),
+    );
+  }
+
+  // ────────────────────────────────────────────────
+  // TAB 2: PENGUMUMAN
+  // ────────────────────────────────────────────────
+  Widget _buildAnnouncementsTab() {
+    if (_loadingAnnouncements) return const Center(child: CircularProgressIndicator());
+    if (_errorAnnouncements != null) return _buildError(_errorAnnouncements!, () => _fetchAnnouncements(context.read<AuthProvider>().token ?? ''));
+    if (_announcements.isEmpty) return _buildEmpty('Belum ada pengumuman.');
+
+    return RefreshIndicator(
+      onRefresh: () => _fetchAnnouncements(context.read<AuthProvider>().token ?? ''),
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+        itemCount: _announcements.length,
+        itemBuilder: (context, index) {
+          final item = _announcements[index];
+          final isKegiatan = item['is_kegiatan'] == true;
+
+          return InkWell(
+            onTap: () => AnnouncementDetailModal.show(
+              context,
+              title: item['judul'] ?? '',
+              content: item['konten'] ?? '',
+              category: item['kategori'],
+              fotoUrl: item['foto_url'],
+              isKegiatan: isKegiatan,
+              tanggalKegiatan: item['tanggal_kegiatan']?.toString(),
+              createdAtStr: item['created_at']?.toString().split('T')[0],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isKegiatan ? AppColors.primaryYellow.withOpacity(0.15) : AppColors.primaryGreen.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      isKegiatan ? Icons.event_note_rounded : Icons.campaign_outlined,
+                      color: isKegiatan ? const Color(0xFF856404) : AppColors.primaryGreen,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isKegiatan ? 'KEGIATAN' : 'PENGUMUMAN',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: isKegiatan ? const Color(0xFF856404) : AppColors.primaryGreen,
+                          ),
+                        ),
+                        Text(item['judul'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(item['konten'] ?? '', style: TextStyle(fontSize: 12, color: Colors.grey.shade500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        item['created_at']?.toString().split('T')[0] ?? '',
+                        style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
+                      ),
+                      const SizedBox(height: 4),
+                      const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 18),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
+          );
+        },
+      ),
+    );
+  }
+
+  // ────────────────────────────────────────────────
+  // TAB 3: SURAT
+  // ────────────────────────────────────────────────
+  Widget _buildLettersTab(AuthProvider auth) {
+    if (_loadingLetters) return const Center(child: CircularProgressIndicator());
+    if (_errorLetters != null) return _buildError(_errorLetters!, () => _fetchLetters(auth.token ?? ''));
+    if (_letters.isEmpty) return _buildEmpty('Tidak ada permohonan surat.');
+
+    return RefreshIndicator(
+      onRefresh: () => _fetchLetters(auth.token ?? ''),
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+        itemCount: _letters.length,
+        itemBuilder: (context, index) {
+          final item = _letters[index];
+          final status = item['status'] as String? ?? '';
+          final canApprove = (auth.isRW && status == 'APPROVED_RT_PENDING_RW') ||
+                             (auth.isRT && status == 'PENDING_RT');
+
+          Color statusColor;
+          String statusLabel;
+          switch (status) {
+            case 'PENDING_RT': statusColor = Colors.orangeAccent; statusLabel = 'Menunggu RT'; break;
+            case 'APPROVED_RT_PENDING_RW': statusColor = Colors.blue; statusLabel = 'Menunggu RW'; break;
+            case 'APPROVED_RW': statusColor = AppColors.primaryGreen; statusLabel = 'Disetujui RW'; break;
+            case 'REJECTED_RT': statusColor = Colors.redAccent; statusLabel = 'Ditolak RT'; break;
+            case 'REJECTED_RW': statusColor = Colors.redAccent; statusLabel = 'Ditolak RW'; break;
+            default: statusColor = Colors.grey; statusLabel = status;
+          }
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
+            ),
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  Container(
+                    width: 5,
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(18), bottomLeft: Radius.circular(18)),
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                                child: Text(statusLabel, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                              ),
+                              Text(
+                                item['created_at']?.toString().split('T')[0] ?? '',
+                                style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(item['jenis_surat'] ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                          Text(
+                            'Pemohon: ${item['pemohon_nama'] ?? '-'}${item['nomor_rt'] != null ? ' (RT ${item['nomor_rt']})' : ''}',
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                          ),
+                          if ((item['keterangan_keperluan'] as String? ?? '').isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              item['keterangan_keperluan'],
+                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                          if (canApprove) ...[
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                OutlinedButton.icon(
+                                  onPressed: () => _showConfirmDialog(item['id'], 'REJECTED'),
+                                  icon: const Icon(Icons.close_rounded, size: 16),
+                                  label: const Text('Tolak'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.redAccent,
+                                    side: const BorderSide(color: Colors.redAccent),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton.icon(
+                                  onPressed: () => _showConfirmDialog(item['id'], 'APPROVED'),
+                                  icon: const Icon(Icons.check_rounded, size: 16),
+                                  label: const Text('Setujui'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primaryGreen,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showConfirmDialog(dynamic letterId, String status) {
+    final isApprove = status == 'APPROVED';
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(isApprove ? 'Setujui Surat?' : 'Tolak Surat?'),
+        content: Text(isApprove
+            ? 'Surat ini akan diteruskan dan disetujui. Yakin?'
+            : 'Surat ini akan ditolak. Yakin?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Batal', style: TextStyle(color: Colors.grey.shade600)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _verifyLetter(letterId is int ? letterId : int.parse(letterId.toString()), status);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isApprove ? AppColors.primaryGreen : Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(isApprove ? 'Setujui' : 'Tolak', style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChip(String label) {
-    final isSelected = _selectedCategory == label;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedCategory = label),
-      child: Container(
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryGreen : Colors.greenAccent.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.green.shade900,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
+  // ── Helpers ──────────────────────────────────────
+  Widget _buildEmpty(String message) => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.inbox_rounded, size: 52, color: Colors.grey.shade300),
+        const SizedBox(height: 12),
+        Text(message, style: TextStyle(color: Colors.grey.shade500, fontSize: 14)),
+      ],
+    ),
+  );
 
-  Widget _buildMessageItem({
-    required String title,
-    required String sender,
-    required String snippet,
-    required String time,
-    required Color statusColor,
-    required IconData icon,
-    bool isRead = false,
-    List<IconData> actions = const [],
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Container(
-              width: 4,
-              decoration: BoxDecoration(
-                color: statusColor,
-                borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(icon, color: statusColor, size: 20),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            time,
-                            style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: isRead ? FontWeight.bold : FontWeight.w800,
-                        color: AppColors.textPrimaryLight,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      sender,
-                      style: const TextStyle(fontSize: 12, color: AppColors.primaryGreen, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      snippet,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, color: Colors.grey, height: 1.4),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: actions.map((aIcon) => Padding(
-                        padding: const EdgeInsets.only(left: 16),
-                        child: Icon(aIcon, color: Colors.grey.shade400, size: 20),
-                      )).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+  Widget _buildError(String error, VoidCallback retry) => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+        const SizedBox(height: 12),
+        Text(error, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.error)),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: retry,
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen, foregroundColor: Colors.white),
+          child: const Text('Coba Lagi'),
         ),
-      ),
-    );
+      ],
+    ),
+  );
+
+  String _bulanName(int bulan) {
+    const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return bulan >= 1 && bulan <= 12 ? months[bulan] : '-';
   }
 }

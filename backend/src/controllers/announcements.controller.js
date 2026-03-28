@@ -5,10 +5,10 @@ const { getPaginationMeta } = require('../utils/pagination');
 const announcementsController = {
   async createAnnouncement(req, res, next) {
     try {
-      const { target, target_rt_id, judul, konten, is_kegiatan, tanggal_kegiatan } = req.body;
+      const { target, target_rt_id, judul, konten, foto_url, is_kegiatan, tanggal_kegiatan } = req.body;
       const pembuat_user_id = req.user.id; // From authenticate middleware
 
-      const data = { pembuat_user_id, target, target_rt_id, judul, konten, is_kegiatan, tanggal_kegiatan };
+      const data = { pembuat_user_id, target, target_rt_id, judul, konten, foto_url, is_kegiatan, tanggal_kegiatan };
       const announcement = await announcementService.createAnnouncement(data);
 
       return createdResponse(res, 'Pengumuman dibuat', announcement);

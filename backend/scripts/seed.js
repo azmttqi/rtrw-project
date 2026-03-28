@@ -1,5 +1,5 @@
 require('dotenv').config();
-const pool = require('./config/database');
+const pool = require('../src/config/database');
 const bcrypt = require('bcryptjs');
 
 async function seed() {
@@ -8,8 +8,11 @@ async function seed() {
 
     // 1. Setup RW & RT
     const resRw = await pool.query(`
-      INSERT INTO rws (nomor_rw) VALUES ('01') 
-      ON CONFLICT (nomor_rw) DO UPDATE SET nomor_rw=EXCLUDED.nomor_rw 
+      INSERT INTO rws (nomor_rw, nama_wilayah, alamat) 
+      VALUES ('01', 'Tulip Residence', 'Jl. Tulip No. 123') 
+      ON CONFLICT (nomor_rw) DO UPDATE SET 
+        nama_wilayah=EXCLUDED.nama_wilayah, 
+        alamat=EXCLUDED.alamat
       RETURNING id
     `);
     const rwId = resRw.rows[0].id;

@@ -13,6 +13,7 @@ const duesRoutes = require('./routes/dues.routes');
 const lettersRoutes = require('./routes/letters.routes');
 const rwRoutes = require('./routes/rw.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const notificationRoutes = require('./routes/notification.routes');
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/dues', duesRoutes);
 app.use('/api/letters', lettersRoutes);
 app.use('/api/rw', rwRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
