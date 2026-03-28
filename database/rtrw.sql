@@ -37,6 +37,8 @@ CREATE TYPE status_laporan AS ENUM ('PENDING', 'DIPROSES', 'SELESAI', 'DITOLAK')
 CREATE TABLE rws (
     id SERIAL PRIMARY KEY,
     nomor_rw VARCHAR(10) NOT NULL,
+    nama_wilayah VARCHAR(150),
+    alamat TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_rw UNIQUE (nomor_rw)
 );
@@ -167,6 +169,7 @@ CREATE TABLE announcements (
 
     judul VARCHAR(255) NOT NULL,
     konten TEXT NOT NULL,
+    foto_url TEXT,
 
     is_kegiatan BOOLEAN DEFAULT FALSE,
     tanggal_kegiatan DATE,

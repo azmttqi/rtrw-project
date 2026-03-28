@@ -29,12 +29,26 @@ class AnnouncementProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addAnnouncement(String title, String content, String? category) async {
+  Future<void> addAnnouncement({
+    required String title,
+    required String content,
+    required String target,
+    String? fotoUrl,
+    bool isKegiatan = false,
+    String? tanggalKegiatan,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _service.createAnnouncement(title, content, category);
+      await _service.createAnnouncement(
+        title: title,
+        content: content,
+        target: target,
+        fotoUrl: fotoUrl,
+        isKegiatan: isKegiatan,
+        tanggalKegiatan: tanggalKegiatan,
+      );
       await fetchAnnouncements(); // Refresh list
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');

@@ -1,4 +1,5 @@
 const dashboardService = require('../services/dashboard.service');
+const financeRepository = require('../repositories/finance.repository');
 const { successResponse, errorResponse } = require('../utils/response');
 
 const dashboardController = {
@@ -9,7 +10,22 @@ const dashboardController = {
     } catch (error) {
       next(error);
     }
-  }
+  },
+
+  async getFinanceSummary(req, res, next) {
+    try {
+      const user = req.user;
+      let data = {};
+      if (user.role === 'RW') {
+        data = await financeRepository.getFinanceSummaryForRW(user.rw_id);
+      } else if (user.role === 'RT') {
+        data = await financeRepository.getFinanceSummaryForRT(user.rt_id);
+      }
+      return successResponse(res, 'Finance summary', data);
+    } catch (error) {
+      next(error);
+    }
+  },
 };
 
 module.exports = dashboardController;

@@ -137,4 +137,16 @@ class AuthProvider with ChangeNotifier {
     await prefs.remove('user');
     notifyListeners();
   }
+
+  Future<void> refreshProfile() async {
+    try {
+      final result = await _authService.getProfile();
+      _user = result['data'];
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user', json.encode(_user));
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error refreshing profile: $e');
+    }
+  }
 }

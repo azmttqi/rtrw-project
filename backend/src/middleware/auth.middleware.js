@@ -16,7 +16,12 @@ const authenticate = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     const result = await pool.query(
-      'SELECT id, nama, no_wa, role, rt_id, rw_id, is_verified FROM users WHERE id = $1',
+      `SELECT u.id, u.nama, u.no_wa, u.role, u.rt_id, u.rw_id, u.is_verified,
+              r.nomor_rt, rw.nomor_rw
+       FROM users u
+       LEFT JOIN rts r ON u.rt_id = r.id
+       LEFT JOIN rws rw ON u.rw_id = rw.id OR (u.role = 'RW' AND rw.id = (SELECT id FROM rws WHERE id = u.rw_id))
+       WHERE u.id = $1`,
       [decoded.userId]
     );
 

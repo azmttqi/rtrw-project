@@ -1,11 +1,60 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../auth/logic/auth_provider.dart';
+import '../data/finance_service.dart';
 import './atur_tagihan_screen.dart';
-import 'package:flutter/material.dart';
 
-class FinanceScreen extends StatelessWidget {
+class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
+
+  @override
+  State<FinanceScreen> createState() => _FinanceScreenState();
+}
+
+class _FinanceScreenState extends State<FinanceScreen> {
+  final FinanceService _service = FinanceService();
+  Map<String, dynamic>? _summary;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  Future<void> _load() async {
+    if (!mounted) return;
+    final token = context.read<AuthProvider>().token ?? '';
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final data = await _service.getFinanceSummary(token);
+      if (mounted) {
+        setState(() {
+          _summary = data;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  String _formatRp(dynamic val) {
+    if (val == null) return 'Rp 0';
+    final double amount = val is double ? val : (val is int ? val.toDouble() : double.tryParse(val.toString()) ?? 0.0);
+    return 'Rp ${NumberFormat('#,###', 'id').format(amount)}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,155 +62,191 @@ class FinanceScreen extends StatelessWidget {
     
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  auth.isRW ? 'MANAJEMEN KEUANGAN' : 'KEUANGAN RT',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryGreen.withOpacity(0.8),
-                    letterSpacing: 1.2,
-                  ),
+      body: RefreshIndicator(
+        onRefresh: _load,
+        color: AppColors.primaryGreen,
+        child: _loading
+            ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
+            : _error != null
+                ? _buildError()
+                : _buildContent(auth),
+      ),
+    );
+  }
+
+  Widget _buildError() => ListView(
+    children: [
+      SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+      const Icon(Icons.error_outline, color: Colors.red, size: 48),
+      const SizedBox(height: 16),
+      Center(child: Text(_error!, textAlign: TextAlign.center)),
+      TextButton(onPressed: _load, child: const Text('Coba Lagi')),
+    ],
+  );
+
+  Widget _buildContent(AuthProvider auth) {
+    final s = _summary!;
+    final totalKas = s['total_kas'] ?? 0.0;
+    
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                auth.isRW ? 'MANAJEMEN KEUANGAN' : 'KEUANGAN RT',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryGreen.withOpacity(0.8),
+                  letterSpacing: 1.2,
                 ),
-                if (auth.isRT)
-                  const Icon(Icons.notifications_none_rounded, color: Colors.grey),
+              ),
+              if (auth.isRT)
+                const Icon(Icons.notifications_none_rounded, color: Colors.grey),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Total Kas Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primaryGreen, Color(0xFF2E7D32)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryGreen.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
               ],
             ),
-            const SizedBox(height: 24),
-
-            // Total Kas Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primaryGreen, Color(0xFF2E7D32)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  auth.isRW ? 'TOTAL KAS RUKUN WARGA' : 'TOTAL SALDO KAS RT',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryGreen.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+                const SizedBox(height: 12),
+                Text(
+                  _formatRp(totalKas),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                   Text(
-                    auth.isRW ? 'TOTAL KAS RUKUN WARGA' : 'TOTAL SALDO KAS RT 04',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.trending_up, color: Colors.white, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '+${_formatRp(s['pemasukan_bulan_ini'])}',
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    auth.isRW ? 'Rp 128.450.000' : 'Rp 12.450.000',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
+                    if (auth.isRT) ...[
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.trending_up, color: Colors.white, size: 16),
-                            SizedBox(width: 4),
-                            Text(
-                              '+12% Bulan Ini',
-                              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
+                        child: const Text('Bank Mandiri', style: TextStyle(color: Colors.white, fontSize: 11)),
                       ),
-                      if (auth.isRT) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text('Bank Mandiri', style: TextStyle(color: Colors.white, fontSize: 11)),
-                        ),
-                      ],
-                      const Spacer(),
-                      if (auth.isRW)
-                        ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: AppColors.primaryGreen,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            elevation: 0,
-                          ),
-                          child: const Text('Kirim Laporan', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
                     ],
-                  ),
-                ],
-              ),
+                    const Spacer(),
+                    if (auth.isRW)
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.primaryGreen,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          elevation: 0,
+                        ),
+                        child: const Text('Kirim Laporan', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
+          ),
+          const SizedBox(height: 24),
 
-            if (auth.isRT) ...[
-              _buildUploadCard(),
-              const SizedBox(height: 32),
-              _buildCitizenDuesStatus(context),
-              const SizedBox(height: 32),
-              _buildCashSummary(),
-            ] else ...[
-              const SizedBox(height: 32),
-              _buildRWFineBody(context),
-            ],
-            
+          if (auth.isRT) ...[
+            _buildUploadCard(),
             const SizedBox(height: 32),
-            const Text(
-              'Transaksi Terakhir',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight),
-            ),
-            const SizedBox(height: 16),
-            _buildTransactionItem(
-              auth.isRW ? 'Iuran RT 01' : 'Iuran Keamanan - Bp. Ahmad', 
-              auth.isRW ? '+Rp 2.500.000' : '+ Rp 150.000', 
-              '24 Okt 2023', 
-              true,
-              isVerified: auth.isRT,
-            ),
-            _buildTransactionItem(
-              auth.isRW ? 'Perbaikan Gerbang' : 'Perbaikan Lampu Jalan Gg. 3', 
-              auth.isRW ? '-Rp 1.200.000' : '- Rp 450.000', 
-              '22 Okt 2023', 
-              false,
-              hasEvidence: auth.isRT,
-            ),
-            const SizedBox(height: 40),
+            _buildCitizenDuesStatus(context, s),
+            const SizedBox(height: 32),
+            _buildCashSummary(s),
+          ] else ...[
+            const SizedBox(height: 32),
+            _buildRWFineBody(context, s),
           ],
-        ),
+          
+          const SizedBox(height: 32),
+          const Text(
+            'Transaksi Terakhir',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight),
+          ),
+          const SizedBox(height: 16),
+          
+          if ((s['transaksi_terbaru'] as List).isEmpty)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Text('Belum ada transaksi', style: TextStyle(color: Colors.grey)),
+            ))
+          else
+            ...List<Map<String, dynamic>>.from(s['transaksi_terbaru']).map((tx) {
+              final isPositive = true; // For now assuming all additions for RT/RW dues
+              final String title;
+              if (tx['tipe'] == 'RT') {
+                title = 'Iuran RT ${tx['nomor_rt']}';
+              } else {
+                title = 'Iuran ${tx['nama_pembayar']}';
+              }
+              return _buildTransactionItem(
+                title, 
+                _formatRp(tx['nominal']), 
+                tx['dibayar_pada']?.split('T')[0] ?? '${tx['bulan']}/${tx['tahun']}', 
+                isPositive,
+                isVerified: auth.isRT,
+              );
+            }).toList(),
+          
+          const SizedBox(height: 40),
+        ],
       ),
     );
   }
@@ -190,7 +275,11 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCitizenDuesStatus(BuildContext context) {
+  Widget _buildCitizenDuesStatus(BuildContext context, Map<String, dynamic> s) {
+    final sudah = s['sudah_bayar'] ?? 0;
+    final total = s['total_kk'] ?? 0;
+    final belum = total - sudah;
+    
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -204,11 +293,11 @@ class FinanceScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Status Iuran Warga', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text('Oktober 2023', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  const Text('Status Iuran Warga', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('${_summary?['bulan']}/${_summary?['tahun']}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                 ],
               ),
               Container(
@@ -221,9 +310,9 @@ class FinanceScreen extends StatelessWidget {
           const SizedBox(height: 24),
           Row(
             children: [
-              Expanded(child: _buildDuesCounter('Sudah Bayar', '42', '50 KK', Colors.green)),
+              Expanded(child: _buildDuesCounter('Sudah Bayar', sudah.toString(), '$total KK', Colors.green, total)),
               const SizedBox(width: 24),
-              Expanded(child: _buildDuesCounter('Belum Bayar', '8', '50 KK', Colors.redAccent)),
+              Expanded(child: _buildDuesCounter('Belum Bayar', belum.toString(), '$total KK', Colors.redAccent, total)),
             ],
           ),
           const SizedBox(height: 24),
@@ -244,7 +333,7 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDuesCounter(String label, String count, String total, Color color) {
+  Widget _buildDuesCounter(String label, String count, String totalLabel, Color color, int totalVal) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -256,14 +345,14 @@ class FinanceScreen extends StatelessWidget {
           children: [
             Text(count, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: color)),
             const SizedBox(width: 4),
-            Text('/ $total', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text('/ $totalLabel', style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),
         const SizedBox(height: 8),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
-            value: double.parse(count) / 50,
+            value: totalVal > 0 ? double.parse(count) / totalVal : 0,
             backgroundColor: color.withOpacity(0.1),
             valueColor: AlwaysStoppedAnimation<Color>(color),
             minHeight: 4,
@@ -273,7 +362,7 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCashSummary() {
+  Widget _buildCashSummary(Map<String, dynamic> s) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -285,9 +374,9 @@ class FinanceScreen extends StatelessWidget {
         children: [
           const Text('Ringkasan Kas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
-          _buildSummaryRow(Icons.arrow_circle_down_rounded, 'Pemasukan', 'Rp 4.2M', Colors.green),
+          _buildSummaryRow(Icons.arrow_circle_down_rounded, 'Pemasukan', _formatRp(s['total_kas']), Colors.green),
           const SizedBox(height: 12),
-          _buildSummaryRow(Icons.arrow_circle_up_rounded, 'Pengeluaran', 'Rp 1.1M', Colors.redAccent),
+          _buildSummaryRow(Icons.arrow_circle_up_rounded, 'Pengeluaran', _formatRp(s['total_disetor_ke_rw'] ?? 0), Colors.redAccent),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Divider(),
@@ -295,8 +384,8 @@ class FinanceScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Net Profit', style: TextStyle(fontWeight: FontWeight.bold)),
-              const Text('Rp 3.1M', style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryGreen, fontSize: 18)),
+              const Text('Saldo Kas', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(_formatRp(s['total_kas'] - (s['total_disetor_ke_rw'] ?? 0)), style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryGreen, fontSize: 18)),
             ],
           ),
         ],
@@ -316,7 +405,9 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRWFineBody(BuildContext context) {
+  Widget _buildRWFineBody(BuildContext context, Map<String, dynamic> s) {
+    final List rtList = s['rt_dues_status'] ?? [];
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -372,9 +463,21 @@ class FinanceScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        _buildRtStatusItem('RT 01 / RW 08', 'Ketua: Pak Bambang', 'LUNAS', Colors.green),
-        _buildRtStatusItem('RT 02 / RW 08', 'Ketua: Ibu Siti', 'TERTUNDA', Colors.orange),
-        _buildRtStatusItem('RT 03 / RW 08', 'Ketua: Pak Agus', 'LUNAS', Colors.green),
+        if (rtList.isEmpty)
+          const Center(child: Text('Tidak ada data RT', style: TextStyle(color: Colors.grey)))
+        else
+          ...rtList.map((rt) {
+            Color color = Colors.green;
+            if (rt['status'] == 'BELUM_BAYAR') color = Colors.red;
+            if (rt['status'] == 'HAMPIR_JATUH_TEMPO') color = Colors.orange;
+            
+            return _buildRtStatusItem(
+              'RT ${rt['nomor_rt']} / RW ${_summary?['nomor_rw'] ?? '08'}', 
+              'Ketua: ${rt['nama_ketua']}', 
+              rt['status'].replaceAll('_', ' '), 
+              color
+            );
+          }).toList(),
       ],
     );
   }

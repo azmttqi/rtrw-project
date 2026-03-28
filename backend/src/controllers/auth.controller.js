@@ -16,13 +16,7 @@ const authController = {
       });
 
       return createdResponse(res, 'Registrasi berhasil', {
-        user: {
-          id: result.user.id,
-          nama: result.user.nama,
-          no_wa: result.user.no_wa,
-          role: result.user.role,
-          is_verified: result.user.is_verified,
-        },
+        user: result.user,
         token: result.token,
       });
     } catch (error) {
@@ -47,15 +41,7 @@ const authController = {
       const result = await authService.registerGoogle({ idToken, token_invitation });
 
       return successResponse(res, 'Login/Registrasi Google berhasil', {
-        user: {
-          id: result.user.id,
-          nama: result.user.nama,
-          email: result.user.email,
-          role: result.user.role,
-          rt_id: result.user.rt_id,
-          rw_id: result.user.rw_id,
-          is_verified: result.user.is_verified,
-        },
+        user: result.user,
         token: result.token,
       });
     } catch (error) {
@@ -77,15 +63,7 @@ const authController = {
       const result = await authService.login({ no_wa, password });
 
       return successResponse(res, 'Login berhasil', {
-        user: {
-          id: result.user.id,
-          nama: result.user.nama,
-          no_wa: result.user.no_wa,
-          role: result.user.role,
-          rt_id: result.user.rt_id,
-          rw_id: result.user.rw_id,
-          is_verified: result.user.is_verified,
-        },
+        user: result.user,
         token: result.token,
       });
     } catch (error) {

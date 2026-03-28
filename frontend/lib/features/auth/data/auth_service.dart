@@ -82,4 +82,13 @@ class AuthService {
       throw Exception(e.response?.data['message'] ?? 'Gagal memverifikasi email');
     }
   }
+
+  Future<Map<String, dynamic>> getProfile() async {
+    try {
+      final response = await apiClient.get('/auth/me');
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Gagal mengambil profil');
+    }
+  }
 }

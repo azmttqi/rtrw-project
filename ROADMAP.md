@@ -49,6 +49,7 @@ Membangun antarmuka pengguna setelah Backend API stabil.
 - [ ] **UI/UX System Design**: Pembuatan layout dasar, navigasi, dan tema komponen.
 - [ ] **Admin Dashboard Integration**: Halaman khusus pengurus untuk mengelola warga, memvalidasi persuratan, dan memonitor kas.
 - [ ] **User Portal Integration**: Halaman warga untuk melihat tagihan iuran, mengajukan surat, dan membaca pengumuman.
+- [ ] **Sistem File Upload (Backend & Frontend)**: Implementasi *Multer* di backend dan *image_picker* di Flutter untuk fitur lampiran foto sungguhan (pengumuman, fasilitas, keluhan).
 - [ ] **Responsive Design Alignment**: Memastikan tampilan optimal di perangkat desktop maupun *mobile*.
 
 ## Phase 4: Testing, Security & Optimization

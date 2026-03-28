@@ -8,6 +8,8 @@ import '../../auth/logic/auth_provider.dart';
 import './inbox_screen.dart';
 import './finance_screen.dart';
 import './profile_screen.dart';
+import '../../announcements/presentation/create_announcement_screen.dart';
+import '../../announcements/presentation/widgets/announcement_detail_modal.dart';
 import '../logic/dashboard_provider.dart';
 import 'package:intl/intl.dart';
 
@@ -61,6 +63,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         },
       ),
+      floatingActionButton: _currentIndex == 0 
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CreateAnnouncementScreen()),
+                ).then((_) {
+                  if (context.mounted) {
+                    context.read<DashboardProvider>().fetchStats();
+                  }
+                });
+              },
+              backgroundColor: AppColors.primaryGreen,
+              elevation: 4,
+              child: const Icon(Icons.campaign_rounded, color: Colors.white, size: 28),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: () => context.read<DashboardProvider>().fetchStats(),
         color: AppColors.primaryGreen,
@@ -227,7 +246,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 12),
                 if (latestAnnouncements.isNotEmpty)
-                  _buildFeaturedAnnouncement(latestAnnouncements[0])
+                  latestAnnouncements[0]['foto_url'] != null && latestAnnouncements[0]['foto_url'].toString().isNotEmpty
+                    ? _buildFeaturedAnnouncement(latestAnnouncements[0])
+                    : _buildMinorAnnouncement(latestAnnouncements[0])
                 else
                   _buildEmptyState('Belum ada pengumuman.'),
                 
@@ -824,10 +845,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             child: Image.network(
-              'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2013&auto=format&fit=crop',
+              data['foto_url'] ?? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2013&auto=format&fit=crop',
               height: 180,
               width: double.infinity,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                height: 180,
+                width: double.infinity,
+                color: Colors.grey.shade300,
+                child: const Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
+              ),
             ),
           ),
           Padding(
@@ -877,7 +904,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 12),
                 InkWell(
                   onTap: () {
-                     Navigator.pushNamed(context, '/announcements');
+                    AnnouncementDetailModal.show(
+                      context,
+                      title: data['judul'] ?? 'No Title',
+                      content: data['konten'] ?? '',
+                      isKegiatan: data['is_kegiatan'] == true,
+                      tanggalKegiatan: data['tanggal_kegiatan']?.toString(),
+                      createdAtStr: data['created_at']?.toString().split('T')[0],
+                      fotoUrl: data['foto_url'],
+                    );
                   },
                   child: Row(
                     children: [
@@ -896,50 +931,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildMinorAnnouncement(dynamic data) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            child: Icon(
-              data['is_kegiatan'] == true ? Icons.event_note : Icons.campaign_outlined, 
-              color: AppColors.primaryGreen, 
-              size: 24
+    return InkWell(
+      onTap: () {
+        AnnouncementDetailModal.show(
+          context,
+          title: data['judul'] ?? 'No Title',
+          content: data['konten'] ?? '',
+          isKegiatan: data['is_kegiatan'] == true,
+          tanggalKegiatan: data['tanggal_kegiatan']?.toString(),
+          createdAtStr: data['created_at']?.toString().split('T')[0],
+          fotoUrl: data['foto_url'],
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F1),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              child: Icon(
+                data['is_kegiatan'] == true ? Icons.event_note : Icons.campaign_outlined, 
+                color: AppColors.primaryGreen, 
+                size: 24
+              ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  data['is_kegiatan'] == true ? 'KEGIATAN' : 'PENGUMUMAN', 
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)
-                ),
-                Text(
-                  data['judul'] ?? '', 
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  data['konten'] ?? '', 
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data['is_kegiatan'] == true ? 'KEGIATAN' : 'PENGUMUMAN', 
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)
+                  ),
+                  Text(
+                    data['judul'] ?? '', 
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    data['konten'] ?? '', 
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Icon(Icons.chevron_right_rounded, color: Colors.grey),
-        ],
+            const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }

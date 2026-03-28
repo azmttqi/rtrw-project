@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../logic/announcement_provider.dart';
+import './widgets/announcement_detail_modal.dart';
 
 class AnnouncementListScreen extends StatefulWidget {
   const AnnouncementListScreen({super.key});
@@ -12,12 +13,48 @@ class AnnouncementListScreen extends StatefulWidget {
 }
 
 class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
+  DateTime? _selectedDate;
+
   @override
   void initState() {
     super.initState();
     Future.microtask(
       () => context.read<AnnouncementProvider>().fetchAnnouncements(),
     );
+  }
+
+  // Filter list berdasarkan tanggal yang dipilih (bulan & tahun)
+  List<dynamic> _getFiltered(AnnouncementProvider provider) {
+    if (_selectedDate == null) return provider.announcements;
+    return provider.announcements.where((item) {
+      return item.createdAt.year == _selectedDate!.year &&
+             item.createdAt.month == _selectedDate!.month;
+    }).toList();
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? now,
+      firstDate: DateTime(2020),
+      lastDate: now,
+      helpText: 'Pilih Bulan & Tahun',
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: AppColors.primaryGreen,
+            onPrimary: Colors.white,
+            surface: Colors.white,
+            onSurface: Colors.black87,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
   }
 
   @override
@@ -139,12 +176,79 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                     height: 1.5,
                   ),
                 ),
+                const SizedBox(height: 16),
+                // Filter Tanggal Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: _pickDate,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: _selectedDate != null
+                                ? AppColors.primaryGreen.withOpacity(0.08)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _selectedDate != null
+                                  ? AppColors.primaryGreen
+                                  : Colors.grey.shade300,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_month_outlined,
+                                size: 16,
+                                color: _selectedDate != null
+                                    ? AppColors.primaryGreen
+                                    : Colors.grey.shade500,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _selectedDate != null
+                                    ? DateFormat('MMMM yyyy').format(_selectedDate!)
+                                    : 'Filter Berdasarkan Bulan',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: _selectedDate != null
+                                      ? AppColors.primaryGreen
+                                      : Colors.grey.shade500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (_selectedDate != null) ...
+                      [
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: () => setState(() => _selectedDate = null),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: Icon(Icons.close_rounded, size: 16, color: Colors.red.shade400),
+                          ),
+                        ),
+                      ],
+                  ],
+                ),
               ],
             ),
           ),
         ),
 
-        if (provider.announcements.isEmpty)
+        if (provider.announcements.isEmpty || _getFiltered(provider).isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
             child: Center(
@@ -153,12 +257,27 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.info_outline, color: Colors.grey.shade400, size: 48),
+                    Icon(
+                      _selectedDate != null ? Icons.search_off_rounded : Icons.info_outline,
+                      color: Colors.grey.shade400, 
+                      size: 48
+                    ),
                     const SizedBox(height: 16),
                     Text(
-                      'Belum ada pengumuman.',
+                      _selectedDate != null
+                          ? 'Tidak ada pengumuman pada\n${DateFormat('MMMM yyyy').format(_selectedDate!)}'
+                          : 'Belum ada pengumuman.',
+                      textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
                     ),
+                    if (_selectedDate != null) ...[const SizedBox(height: 12),
+                      TextButton.icon(
+                        onPressed: () => setState(() => _selectedDate = null),
+                        icon: const Icon(Icons.refresh_rounded, size: 14),
+                        label: const Text('Hapus Filter'),
+                        style: TextButton.styleFrom(foregroundColor: AppColors.primaryGreen),
+                      ),
+                    ]
                   ],
                 ),
               ),
@@ -166,68 +285,90 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
           ),
 
         // List of Announcements
-        if (provider.announcements.isNotEmpty)
+        if (_getFiltered(provider).isNotEmpty)
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final item = provider.announcements[index];
+                  final filtered = _getFiltered(provider);
+                  final item = filtered[index];
                   final isLatest = index == 0;
                   
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (isLatest)
-                          ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                            child: Stack(
-                              children: [
-                                Image.network(
-                                  'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2013&auto=format&fit=crop',
-                                  height: 180,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
-                                Positioned(
-                                  top: 16,
-                                  left: 16,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black45,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Row(
-                                      children: [
-                                        Icon(Icons.star_rounded, color: Colors.amber, size: 14),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'TERBARU',
-                                          style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                        ),
-                                      ],
+                  return InkWell(
+                    onTap: () {
+                      AnnouncementDetailModal.show(
+                        context,
+                        title: item.title,
+                        content: item.content,
+                        category: item.category,
+                        fotoUrl: item.fotoUrl,
+                        isKegiatan: item.isKegiatan,
+                        tanggalKegiatan: item.tanggalKegiatan,
+                        authorName: item.authorName,
+                        createdAtStr: item.createdAt.toString().split(' ')[0], // Date format
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (item.fotoUrl != null && item.fotoUrl!.isNotEmpty)
+                            ClipRRect(
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                              child: Stack(
+                                children: [
+                                  Image.network(
+                                    item.fotoUrl!,
+                                    height: 180,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      height: 180,
+                                      width: double.infinity,
+                                      color: Colors.grey.shade300,
+                                      child: const Icon(Icons.image_not_supported, color: Colors.grey),
                                     ),
                                   ),
-                                ),
-                              ],
+                                  if (isLatest)
+                                    Positioned(
+                                      top: 16,
+                                      left: 16,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black45,
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: const Row(
+                                          children: [
+                                            Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'TERBARU',
+                                              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        
-                        Padding(
+                          
+                          Padding(
                           padding: const EdgeInsets.all(24),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,15 +379,17 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                     decoration: BoxDecoration(
-                                      color: AppColors.primaryYellow.withOpacity(0.1),
+                                      color: item.isKegiatan 
+                                          ? AppColors.primaryYellow.withOpacity(0.1) 
+                                          : AppColors.primaryGreen.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
-                                      item.category?.toUpperCase() ?? 'PENGUMUMAN',
-                                      style: const TextStyle(
+                                      item.isKegiatan ? 'KEGIATAN' : (item.category?.toUpperCase() ?? 'PENGUMUMAN'),
+                                      style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w800,
-                                        color: Color(0xFF856404),
+                                        color: item.isKegiatan ? const Color(0xFF856404) : AppColors.primaryGreen,
                                         letterSpacing: 0.5,
                                       ),
                                     ),
@@ -306,10 +449,11 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                         ),
                       ],
                     ),
-                  );
-                },
-                childCount: provider.announcements.length,
-              ),
+                  ), // Closes Container
+                ); // Closes InkWell
+              },
+              childCount: _getFiltered(provider).length,
+            ),
             ),
           ),
         const SliverToBoxAdapter(child: SizedBox(height: 40)),

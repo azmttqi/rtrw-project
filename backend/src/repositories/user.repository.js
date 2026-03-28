@@ -3,14 +3,26 @@ const pool = require('../config/database');
 const userRepository = {
   async findById(id) {
     const result = await pool.query(
-      'SELECT id, nama, no_wa, email, google_id, role, rt_id, rw_id, is_verified, created_at FROM users WHERE id = $1',
+      `SELECT u.id, u.nama, u.no_wa, u.email, u.google_id, u.role, u.rt_id, u.rw_id, u.is_verified, u.created_at,
+              r.nomor_rt, rw.nomor_rw
+       FROM users u
+       LEFT JOIN rts r ON u.rt_id = r.id
+       LEFT JOIN rws rw ON u.rw_id = rw.id
+       WHERE u.id = $1`,
       [id]
     );
     return result.rows[0];
   },
 
   async findByNoWa(no_wa) {
-    const result = await pool.query('SELECT * FROM users WHERE no_wa = $1', [no_wa]);
+    const result = await pool.query(
+      `SELECT u.*, r.nomor_rt, rw.nomor_rw
+       FROM users u
+       LEFT JOIN rts r ON u.rt_id = r.id
+       LEFT JOIN rws rw ON u.rw_id = rw.id
+       WHERE u.no_wa = $1`, 
+      [no_wa]
+    );
     return result.rows[0];
   },
 
@@ -20,13 +32,24 @@ const userRepository = {
   },
 
   async findByGoogleId(google_id) {
-    const result = await pool.query('SELECT * FROM users WHERE google_id = $1', [google_id]);
+    const result = await pool.query(
+      `SELECT u.*, r.nomor_rt, rw.nomor_rw
+       FROM users u
+       LEFT JOIN rts r ON u.rt_id = r.id
+       LEFT JOIN rws rw ON u.rw_id = rw.id
+       WHERE u.google_id = $1`, 
+      [google_id]
+    );
     return result.rows[0];
   },
 
   async findByIdentifier(identifier) {
     const result = await pool.query(
-      'SELECT * FROM users WHERE no_wa = $1 OR email = $2',
+      `SELECT u.*, r.nomor_rt, rw.nomor_rw
+       FROM users u
+       LEFT JOIN rts r ON u.rt_id = r.id
+       LEFT JOIN rws rw ON u.rw_id = rw.id
+       WHERE u.no_wa = $1 OR u.email = $2`,
       [identifier, identifier]
     );
     return result.rows[0];
@@ -42,7 +65,9 @@ const userRepository = {
        RETURNING id, nama, no_wa, email, google_id, role, rt_id, rw_id, is_verified, created_at`,
       [nama, no_wa, email, google_id, password_hash, role, rt_id, rw_id, final_verified]
     );
-    return result.rows[0];
+    
+    // Return with joined data for consistency
+    return this.findById(result.rows[0].id);
   },
 
   async update(id, data) {

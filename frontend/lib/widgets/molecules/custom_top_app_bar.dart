@@ -17,6 +17,7 @@ class CustomTopAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: AppColors.backgroundLight,
       elevation: 0,
       centerTitle: false,
+      automaticallyImplyLeading: false,
       leading: leading,
       title: Row(
         children: [

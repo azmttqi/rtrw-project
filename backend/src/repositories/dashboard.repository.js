@@ -26,14 +26,19 @@ const dashboardRepository = {
       [rwId]
     );
 
-    // 4. Announcements (Only from this RW)
+    // 4. Announcements (Only from this RW & Active ones)
+    // Rule: Kegiatan disappears after its date, Pengumuman disappears after 24h
     const announcementsResult = await pool.query(
       `SELECT a.*, r.nomor_rt 
        FROM announcements a
        JOIN users u ON a.pembuat_user_id = u.id
        LEFT JOIN rts r ON a.target_rt_id = r.id
-       WHERE (a.target = 'SEMUA_RW' AND u.rw_id = $1)
-          OR (a.target = 'WARGA_RT' AND a.target_rt_id IN (SELECT id FROM rts WHERE rw_id = $1))
+       WHERE u.rw_id = $1
+         AND (
+           (a.is_kegiatan = true AND a.tanggal_kegiatan >= CURRENT_DATE)
+           OR 
+           (a.is_kegiatan = false AND a.created_at >= NOW() - INTERVAL '24 hours')
+         )
        ORDER BY a.created_at DESC LIMIT 3`,
       [rwId]
     );
@@ -99,10 +104,32 @@ const dashboardRepository = {
       [rtId]
     );
 
+    // 4. Announcements (From RW and this specific RT & Active ones)
+    // Rule: Kegiatan disappears after its date, Pengumuman disappears after 24h
+    const announcementsResult = await pool.query(
+      `SELECT a.*, r.nomor_rt 
+       FROM announcements a
+       JOIN users u ON a.pembuat_user_id = u.id
+       LEFT JOIN rts r ON a.target_rt_id = r.id
+       WHERE (
+          (a.target = 'SEMUA_RW' AND u.rw_id = (SELECT rw_id FROM rts WHERE id = $1))
+          OR (a.target = 'SEMUA_RT' AND u.rw_id = (SELECT rw_id FROM rts WHERE id = $1))
+          OR (a.target = 'WARGA_RT' AND a.target_rt_id = $1)
+       )
+       AND (
+           (a.is_kegiatan = true AND a.tanggal_kegiatan >= CURRENT_DATE)
+           OR 
+           (a.is_kegiatan = false AND a.created_at >= NOW() - INTERVAL '24 hours')
+       )
+       ORDER BY a.created_at DESC LIMIT 3`,
+      [rtId]
+    );
+
     return {
       totalWarga: parseInt(wargaCountResult.rows[0].count),
       totalBalance: parseFloat(balanceResult.rows[0].sum || 0),
-      totalPendingApprovals: parseInt(pendingApprovalsResult.rows[0].count)
+      totalPendingApprovals: parseInt(pendingApprovalsResult.rows[0].count),
+      latestAnnouncements: announcementsResult.rows
     };
   }
 };
