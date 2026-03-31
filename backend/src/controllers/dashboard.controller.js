@@ -20,6 +20,8 @@ const dashboardController = {
         data = await financeRepository.getFinanceSummaryForRW(user.rw_id);
       } else if (user.role === 'RT') {
         data = await financeRepository.getFinanceSummaryForRT(user.rt_id);
+      } else if (user.role === 'WARGA') {
+        data = await financeRepository.getFinanceSummaryForWarga(user.id);
       }
       return successResponse(res, 'Finance summary', data);
     } catch (error) {

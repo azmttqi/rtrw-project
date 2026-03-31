@@ -131,6 +131,49 @@ const dashboardRepository = {
       totalPendingApprovals: parseInt(pendingApprovalsResult.rows[0].count),
       latestAnnouncements: announcementsResult.rows
     };
+  },
+
+  async getWargaStats(userId, rtId) {
+    if (!rtId) {
+      return { totalWarga: 0, totalBalance: 0, latestAnnouncements: [] };
+    }
+    // 1. Total Warga in their RT
+    const wargaCountResult = await pool.query(
+      "SELECT COUNT(*) FROM users WHERE rt_id = $1 AND role = 'WARGA'",
+      [rtId]
+    );
+
+    // 2. RT's Balance (Community Fund)
+    const balanceResult = await pool.query(
+      "SELECT SUM(nominal) FROM dues_payments WHERE status = 'APPROVED' AND pembayar_rt_id = $1",
+      [rtId]
+    );
+
+    // 3. Latest Announcements
+    const announcementsResult = await pool.query(
+      `SELECT a.*, r.nomor_rt 
+       FROM announcements a
+       JOIN users u ON a.pembuat_user_id = u.id
+       LEFT JOIN rts r ON a.target_rt_id = r.id
+       WHERE (
+          (a.target = 'SEMUA_RW' AND u.rw_id = (SELECT rw_id FROM rts WHERE id = $1))
+          OR (a.target = 'SEMUA_RT' AND u.rw_id = (SELECT rw_id FROM rts WHERE id = $1))
+          OR (a.target = 'WARGA_RT' AND a.target_rt_id = $1)
+       )
+       AND (
+           (a.is_kegiatan = true AND a.tanggal_kegiatan >= CURRENT_DATE)
+           OR 
+           (a.is_kegiatan = false AND a.created_at >= NOW() - INTERVAL '24 hours')
+       )
+       ORDER BY a.created_at DESC LIMIT 3`,
+      [rtId]
+    );
+
+    return {
+      totalWarga: parseInt(wargaCountResult?.rows?.[0]?.count || 0),
+      totalBalance: parseFloat(balanceResult?.rows?.[0]?.sum || 0),
+      latestAnnouncements: announcementsResult?.rows || []
+    };
   }
 };
 

@@ -99,7 +99,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                auth.isRW ? 'MANAJEMEN KEUANGAN' : 'KEUANGAN RT',
+                auth.isRW ? 'MANAJEMEN KEUANGAN' : (auth.isRT ? 'KEUANGAN RT' : 'KEUANGAN PRIBADI'),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -136,7 +136,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  auth.isRW ? 'TOTAL KAS RUKUN WARGA' : 'TOTAL SALDO KAS RT',
+                  auth.isRW 
+                      ? 'TOTAL KAS RUKUN WARGA' 
+                      : (auth.isRT ? 'TOTAL SALDO KAS RT' : 'TOTAL IURAN TERBAYAR'),
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -210,9 +212,12 @@ class _FinanceScreenState extends State<FinanceScreen> {
             _buildCitizenDuesStatus(context, s),
             const SizedBox(height: 32),
             _buildCashSummary(s),
-          ] else ...[
+          ] else if (auth.isRW) ...[
             const SizedBox(height: 32),
             _buildRWFineBody(context, s),
+          ] else ...[
+            const SizedBox(height: 32),
+            // Warga specific view could go here, for now using transaction list below
           ],
           
           const SizedBox(height: 32),
@@ -222,13 +227,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
           ),
           const SizedBox(height: 16),
           
-          if ((s['transaksi_terbaru'] as List).isEmpty)
+          if ((s['transaksi_terbaru'] as List?)?.isEmpty ?? true)
             const Center(child: Padding(
               padding: EdgeInsets.all(20.0),
               child: Text('Belum ada transaksi', style: TextStyle(color: Colors.grey)),
             ))
           else
-            ...List<Map<String, dynamic>>.from(s['transaksi_terbaru']).map((tx) {
+            ...List<Map<String, dynamic>>.from(s['transaksi_terbaru'] ?? []).map((tx) {
               final isPositive = true; // For now assuming all additions for RT/RW dues
               final String title;
               if (tx['tipe'] == 'RT') {

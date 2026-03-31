@@ -139,6 +139,54 @@ const financeRepository = {
       transaksi_terbaru: txRes.rows,
     };
   },
+
+  // ─── Untuk Warga: Total iuran pribadi/keluarga ─────────────────────────────
+  async getFinanceSummaryForWarga(userId) {
+    const now = new Date();
+    const bulan = now.getMonth() + 1;
+    const tahun = now.getFullYear();
+
+    // Dapatkan family_id dulu
+    const familyRes = await pool.query('SELECT id FROM families WHERE user_id = $1', [userId]);
+    if (!familyRes || familyRes.rows.length === 0) return { total_kas: 0, pemasukan_bulan_ini: 0, transaksi_terbaru: [], bulan, tahun };
+    
+    const familyId = familyRes.rows[0].id;
+
+    const [totalRes, bulananRes, txRes] = await Promise.all([
+      // Total terbayar
+      pool.query(`
+        SELECT COALESCE(SUM(nominal), 0) as total
+        FROM dues_payments
+        WHERE pembayar_family_id = $1 AND status = 'APPROVED'
+      `, [familyId]),
+
+      // Terbayar bulan ini
+      pool.query(`
+        SELECT COALESCE(SUM(nominal), 0) as bulan_ini
+        FROM dues_payments
+        WHERE pembayar_family_id = $1 AND status = 'APPROVED'
+          AND bulan = $2 AND tahun = $3
+      `, [familyId, bulan, tahun]),
+
+      // Riwayat transaksi keluarga
+      pool.query(`
+        SELECT id, nominal, dibayar_pada, bulan, tahun,
+               'Iuran Pribadi' as nama_pembayar, 'WARGA' as tipe
+        FROM dues_payments
+        WHERE pembayar_family_id = $1 AND status = 'APPROVED'
+        ORDER BY dibayar_pada DESC NULLS LAST
+        LIMIT 10
+      `, [familyId]),
+    ]);
+
+    return {
+      total_kas: parseFloat(totalRes?.rows?.[0]?.total || 0),
+      pemasukan_bulan_ini: parseFloat(bulananRes?.rows?.[0]?.bulan_ini || 0),
+      bulan,
+      tahun,
+      transaksi_terbaru: txRes?.rows || [],
+    };
+  },
 };
 
 module.exports = financeRepository;

@@ -54,7 +54,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     
     final String jabatan = authProvider.isRW
         ? 'Ketua RW $nomorRW • Kelurahan Menteng'
-        : 'Ketua RT $nomorRT / RW $nomorRW • Green Garden';
+        : authProvider.isRT
+            ? 'Ketua RT $nomorRT / RW $nomorRW • Green Garden'
+            : 'Warga RT $nomorRT / RW $nomorRW • Green Garden';
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -150,13 +152,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _buildBadge(
                           authProvider.isRW
                               ? 'VERIFIED OFFICIAL'
-                              : 'VERIFIKASI AKTIF',
+                              : (authProvider.isRT ? 'VERIFIKASI AKTIF' : 'WARGA TERVERIFIKASI'),
                           Colors.green.shade50,
                           Colors.green.shade700,
                         ),
                         const SizedBox(width: 8),
                         _buildBadge(
-                          authProvider.isRW ? 'AKTIF' : 'RT ROLE',
+                          authProvider.isRW ? 'AKTIF' : (authProvider.isRT ? 'RT ROLE' : 'WARGA'),
                           authProvider.isRW
                               ? Colors.green.shade600
                               : AppColors.primaryGreen,
@@ -174,8 +176,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Expanded(
                     child: _buildStatCard(
-                      authProvider.isRW ? 'TOTAL RT DIAWASI' : 'TOTAL WARGA RT',
-                      _stats?['totalRT']?.toString() ?? (_stats?['totalWarga']?.toString() ?? '-'),
+                      authProvider.isRW ? 'TOTAL RT DIAWASI' : (authProvider.isRT ? 'TOTAL WARGA RT' : 'WARGA SE-RT'),
+                      _stats?['totalRT']?.toString() ?? (_stats?['totalWarga']?.toString() ?? '0'),
                       authProvider.isRW
                           ? 'Unit Rukun Tetangga Aktif'
                           : 'Jiwa terdaftar di database',
@@ -189,16 +191,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildStatCard(
-                      authProvider.isRW ? 'TOTAL WARGA TERDATA' : 'LAPORAN AKTIF',
-                      authProvider.isRW ? (_stats?['totalWarga']?.toString() ?? '-') : (_stats?['totalPendingApprovals']?.toString() ?? '0'),
+                      authProvider.isRW ? 'TOTAL WARGA TERDATA' : (authProvider.isRT ? 'LAPORAN AKTIF' : 'KONTRIBUSI'),
+                      authProvider.isRW 
+                          ? (_stats?['totalWarga']?.toString() ?? '-') 
+                          : (authProvider.isRT 
+                              ? (_stats?['totalPendingApprovals']?.toString() ?? '0')
+                              : 'AKTIF'),
                       authProvider.isRW
                           ? 'Jiwa Terverifikasi di RW $nomorRW'
-                          : 'Butuh tindak lanjut segera',
+                          : (authProvider.isRT 
+                              ? 'Butuh tindak lanjut segera'
+                              : 'Partisipasi iuran aktif'),
                       const Color(0xFFE8F5E9),
                       AppColors.primaryGreen,
                       authProvider.isRW
                           ? Icons.people_alt_rounded
-                          : Icons.notification_important_outlined,
+                          : (authProvider.isRT 
+                              ? Icons.notification_important_outlined
+                              : Icons.verified_user_outlined),
                     ),
                   ),
                 ],
@@ -220,18 +230,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ]),
               const SizedBox(height: 24),
               _buildMenuGroup(
-                authProvider.isRW ? 'ADMINISTRASI RW' : 'ADMINISTRASI RT',
+                authProvider.isRW ? 'ADMINISTRASI RW' : (authProvider.isRT ? 'ADMINISTRASI RT' : 'LAYANAN WARGA'),
                 [
                   _buildMenuItem(
                     authProvider.isRW
                         ? Icons.map_outlined
-                        : Icons.people_alt_outlined,
+                        : (authProvider.isRT ? Icons.people_alt_outlined : Icons.description_outlined),
                     authProvider.isRW
                         ? 'Detail Wilayah RW'
-                        : 'Data Kependudukan RT',
+                        : (authProvider.isRT ? 'Data Kependudukan RT' : 'Permohonan Surat'),
                     authProvider.isRW
                         ? 'Denah dan batas administratif'
-                        : 'Manajemen data warga RT',
+                        : (authProvider.isRT ? 'Manajemen data warga RT' : 'Ajukan surat pengantar digital'),
                   ),
                   _buildMenuItem(
                     authProvider.isRW
