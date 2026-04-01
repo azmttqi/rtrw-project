@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../widgets/molecules/custom_bottom_navbar.dart';
 import '../../../../widgets/molecules/custom_top_app_bar.dart';
-import '../../admin/presentation/inbox_screen.dart';
-import '../../admin/presentation/finance_screen.dart';
-import '../../admin/presentation/profile_screen.dart';
+import 'inbox_screen.dart';
+import 'finance_screen.dart';
+import 'profile_screen.dart';
 
 class WargaDashboardScreen extends StatefulWidget {
   const WargaDashboardScreen({super.key});
@@ -38,11 +38,11 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
       case 0:
         return _buildHomeOverview(context);
       case 1:
-        return const InboxScreen();
+        return const WargaInboxScreen();
       case 2:
-        return const FinanceScreen();
+        return const WargaFinanceScreen();
       case 3:
-        return const ProfileScreen();
+        return const WargaProfileScreen();
       default:
         return _buildHomeOverview(context);
     }
@@ -62,7 +62,8 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
           children: [
             const SizedBox(height: 24),
             _buildKeuanganCard(),
-            const SizedBox(height: 24),
+            _buildSectionHeader('Bantuan & Layanan', null),
+            const SizedBox(height: 16),
             _buildMenuUtama(),
             const SizedBox(height: 32),
             _buildSectionHeader('Pembaruan Komunitas', 'Lihat Semua'),
@@ -87,7 +88,10 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
             const SizedBox(height: 16),
             _buildCCTVCard(),
             const SizedBox(height: 32),
-            _buildSectionHeader('Fasilitas Warga', 'Cek ketersediaan dan pesan'),
+            _buildSectionHeader(
+              'Fasilitas Warga',
+              'Cek ketersediaan dan pesan',
+            ),
             const SizedBox(height: 16),
             _buildFasilitasGrid(),
             const SizedBox(height: 32),
@@ -98,8 +102,6 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
       ),
     );
   }
-
-
 
   Widget _buildKeuanganCard() {
     return Container(
@@ -116,20 +118,34 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
             children: [
               const Row(
                 children: [
-                  Icon(Icons.account_balance_wallet_outlined, size: 16, color: Colors.grey),
+                  Icon(
+                    Icons.account_balance_wallet_outlined,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
                   SizedBox(width: 8),
-                  Text('Keuangan Warga', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  Text(
+                    'Keuangan Warga',
+                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFEBD5),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
                   'MENUNGGU',
-                  style: TextStyle(color: Color(0xFFD4822B), fontSize: 10, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Color(0xFFD4822B),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -137,7 +153,11 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
           const SizedBox(height: 12),
           const Text(
             'IDR 150.000',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF4CAF50)),
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF4CAF50),
+            ),
           ),
           const Text(
             'Jatuh tempo 10 Okt 2023',
@@ -150,41 +170,19 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
           const SizedBox(height: 20),
           Row(
             children: [
-              Expanded(child: _buildKeuanganSubCard('SALDO KOMUNITAS', 'IDR 42.5Jt')),
+              Expanded(
+                child: _buildKeuanganSubCard('SALDO KOMUNITAS', 'IDR 42.5Jt'),
+              ),
               const SizedBox(width: 12),
-              Expanded(child: _buildKeuanganSubCard('TRANSAKSI', 'Terdiaudit', subtitle: 'Diperbarui 2 hari lalu')),
+              Expanded(
+                child: _buildKeuanganSubCard(
+                  'TRANSAKSI',
+                  'Terdiaudit',
+                  subtitle: 'Diperbarui 2 hari lalu',
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CB050),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    elevation: 0,
-                  ),
-                  child: const Text('Bayar Sekarang', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: Colors.grey.shade100),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
-                  child: const Text('Liat Riwayat', style: TextStyle(color: Color(0xFF4CB050), fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          )
         ],
       ),
     );
@@ -200,12 +198,29 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.bold)),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 9,
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32))),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2E7D32),
+            ),
+          ),
           if (subtitle != null) ...[
             const SizedBox(height: 2),
-            Text(subtitle, style: const TextStyle(fontSize: 8, color: Colors.grey)),
+            Text(
+              subtitle,
+              style: const TextStyle(fontSize: 8, color: Colors.grey),
+            ),
           ],
         ],
       ),
@@ -215,16 +230,36 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
   Widget _buildMenuUtama() {
     return Column(
       children: [
-        _buildMenuTile(Icons.description_outlined, 'Persuratan', 'Surat Domisili, dsb.', const Color(0xFFE0FAF2)),
+        _buildMenuTile(
+          Icons.description_outlined,
+          'Persuratan',
+          'Surat Domisili, dsb.',
+          const Color(0xFFE0FAF2),
+        ),
         const SizedBox(height: 12),
-        _buildMenuTile(Icons.campaign_outlined, 'Lapor Masalah', 'Sampah, Lampu, Keamanan', const Color(0xFFE7F9F5)),
+        _buildMenuTile(
+          Icons.campaign_outlined,
+          'Lapor Masalah',
+          'Sampah, Lampu, Keamanan',
+          const Color(0xFFE7F9F5),
+        ),
         const SizedBox(height: 12),
-        _buildMenuTile(Icons.handyman_outlined, 'Booking Fasilitas', 'Clubhouse, Lapangan Olahraga', const Color(0xFFFFF7EA)),
+        _buildMenuTile(
+          Icons.handyman_outlined,
+          'Booking Fasilitas',
+          'Clubhouse, Lapangan Olahraga',
+          const Color(0xFFFFF7EA),
+        ),
       ],
     );
   }
 
-  Widget _buildMenuTile(IconData icon, String title, String subtitle, Color color) {
+  Widget _buildMenuTile(
+    IconData icon,
+    String title,
+    String subtitle,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -242,8 +277,17 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-              Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
             ],
           ),
           const Spacer(),
@@ -260,18 +304,37 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             if (action != null && action != 'Lihat Semua')
-              Text(action, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              Text(
+                action,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
           ],
         ),
         if (action == 'Lihat Semua')
-          Text(action!, style: const TextStyle(color: Color(0xFF4CAF50), fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            action!,
+            style: const TextStyle(
+              color: Color(0xFF4CAF50),
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildKomunitasCard(String tag, String date, String title, String desc, Color tagColor) {
+  Widget _buildKomunitasCard(
+    String tag,
+    String date,
+    String title,
+    String desc,
+    Color tagColor,
+  ) {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -286,7 +349,14 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
             width: double.infinity,
             color: Colors.black26,
             child: const Center(
-              child: Text('RV', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
+              child: Text(
+                'RV',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
           Padding(
@@ -297,18 +367,45 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: tagColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                      child: Text(tag, style: TextStyle(color: tagColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: tagColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        tag,
+                        style: TextStyle(
+                          color: tagColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 8),
-                    Text(date, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                    Text(
+                      date,
+                      style: const TextStyle(color: Colors.grey, fontSize: 10),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(desc, style: const TextStyle(fontSize: 12, color: Colors.grey), maxLines: 2, overflow: TextOverflow.ellipsis),
+                Text(
+                  desc,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
@@ -330,22 +427,42 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
             child: Stack(
               children: [
                 Center(
-                  child: Icon(Icons.videocam_outlined, color: Colors.white.withOpacity(0.5), size: 40),
+                  child: Icon(
+                    Icons.videocam_outlined,
+                    color: Colors.white.withOpacity(0.5),
+                    size: 40,
+                  ),
                 ),
                 const Positioned(
-                  left: 16, top: 16,
-                  child: Text('GERBANG 01 PINTU UTARA', style: TextStyle(color: Colors.white, fontSize: 10)),
+                  left: 16,
+                  top: 16,
+                  child: Text(
+                    'GERBANG 01 PINTU UTARA',
+                    style: TextStyle(color: Colors.white, fontSize: 10),
+                  ),
                 ),
                 const Positioned(
-                  right: 16, bottom: 16,
-                  child: Text('2023-10-05 09:30:21', style: TextStyle(color: Colors.white, fontSize: 10)),
+                  right: 16,
+                  bottom: 16,
+                  child: Text(
+                    '2023-10-05 09:30:21',
+                    style: TextStyle(color: Colors.white, fontSize: 10),
+                  ),
                 ),
                 Positioned(
-                  left: 16, bottom: 16,
+                  left: 16,
+                  bottom: 16,
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                    child: const Icon(Icons.fullscreen, color: Colors.white, size: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.fullscreen,
+                      color: Colors.white,
+                      size: 16,
+                    ),
                   ),
                 ),
               ],
@@ -371,8 +488,14 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       alignment: Alignment.center,
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.5), borderRadius: BorderRadius.circular(10)),
-      child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+      ),
     );
   }
 
@@ -385,17 +508,50 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
       crossAxisSpacing: 16,
       childAspectRatio: 1.4,
       children: [
-        _buildFasilitasTile(Icons.pool, 'Kolam Renang', 'Tersedia', const Color(0xFFE0FAF2), Colors.teal),
-        _buildFasilitasTile(Icons.sports_tennis, 'Lapangan Tenis', 'Dipakai', const Color(0xFFF1FDF4), Colors.green),
-        _buildFasilitasTile(Icons.business_outlined, 'Gedung Serbaguna', 'Tersedia', const Color(0xFFF7F1FF), Colors.purple),
-        _buildFasilitasTile(Icons.child_care, 'Taman Bermain', 'Buka', const Color(0xFFFFF7EA), Colors.orange),
+        _buildFasilitasTile(
+          Icons.pool,
+          'Kolam Renang',
+          'Tersedia',
+          const Color(0xFFE0FAF2),
+          Colors.teal,
+        ),
+        _buildFasilitasTile(
+          Icons.sports_tennis,
+          'Lapangan Tenis',
+          'Dipakai',
+          const Color(0xFFF1FDF4),
+          Colors.green,
+        ),
+        _buildFasilitasTile(
+          Icons.business_outlined,
+          'Gedung Serbaguna',
+          'Tersedia',
+          const Color(0xFFF7F1FF),
+          Colors.purple,
+        ),
+        _buildFasilitasTile(
+          Icons.child_care,
+          'Taman Bermain',
+          'Buka',
+          const Color(0xFFFFF7EA),
+          Colors.orange,
+        ),
       ],
     );
   }
 
-  Widget _buildFasilitasTile(IconData icon, String title, String status, Color color, Color iconColor) {
+  Widget _buildFasilitasTile(
+    IconData icon,
+    String title,
+    String status,
+    Color color,
+    Color iconColor,
+  ) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -405,8 +561,18 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
             child: Icon(icon, color: iconColor, size: 20),
           ),
           const SizedBox(height: 8),
-          Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          Text(status, style: TextStyle(fontSize: 10, color: iconColor, fontWeight: FontWeight.w500)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            status,
+            style: TextStyle(
+              fontSize: 10,
+              color: iconColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -421,7 +587,14 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
       ),
       child: Column(
         children: [
-          const Text('Butuh surat pengantar khusus?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2E7D32))),
+          const Text(
+            'Butuh surat pengantar khusus?',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Color(0xFF2E7D32),
+            ),
+          ),
           const SizedBox(height: 8),
           const Text(
             'Lewati antrean. Ajukan surat pengantar RT/RW digital langsung dari ponsel Anda.',
@@ -435,15 +608,18 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
               backgroundColor: const Color(0xFF4CB050),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               elevation: 0,
             ),
-            child: const Text('Ajukan Sekarang', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Ajukan Sekarang',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
     );
   }
-
 }
-
