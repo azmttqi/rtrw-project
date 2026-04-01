@@ -44,7 +44,36 @@ class CustomTopAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
-      actions: actions ?? [],
+      actions: actions ?? [
+        IconButton(
+          onPressed: () {},
+          icon: Stack(
+            children: [
+              const Icon(
+                Icons.notifications_none_rounded,
+                color: Color(0xFF1B5E20),
+                size: 26,
+              ),
+              Positioned(
+                right: 2,
+                top: 2,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 8,
+                    minHeight: 8,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+      ],
     );
   }
 

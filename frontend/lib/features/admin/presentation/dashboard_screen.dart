@@ -63,12 +63,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         },
       ),
-      floatingActionButton: _currentIndex == 0 
+      floatingActionButton: _currentIndex == 0
           ? FloatingActionButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CreateAnnouncementScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const CreateAnnouncementScreen(),
+                  ),
                 ).then((_) {
                   if (context.mounted) {
                     context.read<DashboardProvider>().fetchStats();
@@ -77,7 +79,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
               backgroundColor: AppColors.primaryGreen,
               elevation: 4,
-              child: const Icon(Icons.campaign_rounded, color: Colors.white, size: 28),
+              child: const Icon(
+                Icons.campaign_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
             )
           : null,
       body: RefreshIndicator(
@@ -130,13 +136,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           if (auth.isRW) ...[
             _buildRWDashboard(context, auth),
           ] else ...[
             _buildRTDashboard(context, auth),
           ],
-          
+
           const SizedBox(height: 40),
         ],
       ),
@@ -165,7 +171,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.primaryGreen),
+              const Icon(
+                Icons.calendar_today_rounded,
+                size: 16,
+                color: AppColors.primaryGreen,
+              ),
               const SizedBox(width: 8),
               Text(
                 DateFormat('EEEE, d MMMM yyyy').format(DateTime.now()),
@@ -186,7 +196,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             final isLoading = dashboard.isLoading;
 
             if (isLoading && stats == null) {
-              return const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen));
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primaryGreen),
+              );
             }
 
             final totalRT = stats?['totalRT']?.toString() ?? '0';
@@ -197,8 +209,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               decimalDigits: 0,
             ).format(stats?['totalBalance'] ?? 0);
 
-            final latestAnnouncements = stats?['latestAnnouncements'] as List? ?? [];
-            final rtFinancialStatus = stats?['rtFinancialStatus'] as List? ?? [];
+            final latestAnnouncements =
+                stats?['latestAnnouncements'] as List? ?? [];
+            final rtFinancialStatus =
+                stats?['rtFinancialStatus'] as List? ?? [];
             final latestComplaints = stats?['latestComplaints'] as List? ?? [];
 
             return Column(
@@ -224,7 +238,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   value: totalBalance,
                   trend: 'Teraktual',
                 ),
-                
+
                 const SizedBox(height: 32),
 
                 // Layer 2: Announcement Section
@@ -233,28 +247,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     const Text(
                       'Pengumuman Terpusat',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/announcements'),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/announcements'),
                       child: const Text(
                         'Lihat Semua',
-                        style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: AppColors.primaryGreen,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 if (latestAnnouncements.isNotEmpty)
-                  latestAnnouncements[0]['foto_url'] != null && latestAnnouncements[0]['foto_url'].toString().isNotEmpty
-                    ? _buildFeaturedAnnouncement(latestAnnouncements[0])
-                    : _buildMinorAnnouncement(latestAnnouncements[0])
+                  latestAnnouncements[0]['foto_url'] != null &&
+                          latestAnnouncements[0]['foto_url']
+                              .toString()
+                              .isNotEmpty
+                      ? _buildFeaturedAnnouncement(latestAnnouncements[0])
+                      : _buildMinorAnnouncement(latestAnnouncements[0])
                 else
                   _buildEmptyState('Belum ada pengumuman.'),
-                
+
                 if (latestAnnouncements.length > 1) ...[
                   const SizedBox(height: 16),
-                  ...latestAnnouncements.skip(1).map((a) => _buildMinorAnnouncement(a)).toList(),
+                  ...latestAnnouncements
+                      .skip(1)
+                      .map((a) => _buildMinorAnnouncement(a))
+                      .toList(),
                 ],
                 const SizedBox(height: 32),
 
@@ -299,7 +326,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.primaryGreen),
+              const Icon(
+                Icons.calendar_today_rounded,
+                size: 16,
+                color: AppColors.primaryGreen,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Friday, 27 March 2026',
@@ -312,22 +343,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 24),        Consumer<DashboardProvider>(
+        const SizedBox(height: 24),
+        Consumer<DashboardProvider>(
           builder: (context, dashboard, _) {
             final stats = dashboard.stats;
             final isLoading = dashboard.isLoading;
 
             if (isLoading && stats == null) {
-              return const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen));
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primaryGreen),
+              );
             }
 
             final totalWarga = stats?['totalWarga']?.toString() ?? '0';
-            final totalBalance = NumberFormat.currency(
-              locale: 'id_ID',
-              symbol: 'Rp ',
-              decimalDigits: 0,
-            ).format(stats?['totalBalance'] ?? 0);
-            final pendingApprovals = stats?['totalPendingApprovals']?.toString() ?? '0';
+            final pendingApprovals =
+                stats?['totalPendingApprovals']?.toString() ?? '0';
 
             return Column(
               children: [
@@ -373,11 +403,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.trending_up, color: Colors.greenAccent, size: 16),
+                          const Icon(
+                            Icons.trending_up,
+                            color: Colors.greenAccent,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'Real-time data',
-                            style: TextStyle(fontSize: 12, color: Colors.greenAccent.withOpacity(0.8)),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.greenAccent.withOpacity(0.8),
+                            ),
                           ),
                         ],
                       ),
@@ -399,57 +436,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _buildAgeDistribution(),
                 const SizedBox(height: 32),
 
-                // Community Fund Card
+                // Resident Data Quick Access Card
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: const [
+                    Text(
+                      'Data Kependudukan Warga',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimaryLight,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.grey.shade100),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'COMMUNITY FUND',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        totalBalance,
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.textPrimaryLight),
-                      ),
-                      const SizedBox(height: 16),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Status', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                          const Text('Terverifikasi', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 24,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryGreen.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: const Icon(
+                              Icons.groups_rounded,
+                              color: AppColors.primaryGreen,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          const Expanded(
+                            child: Text(
+                              'Kelola dan pantau data demografi serta administrasi seluruh warga secara terpusat.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.black54,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: const LinearProgressIndicator(
-                          value: 1.0,
-                          minHeight: 8,
-                          backgroundColor: Color(0xFFF1F1F1),
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
                         child: TextButton(
                           onPressed: () {},
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            backgroundColor: const Color(0xFFF8F9F8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: AppColors.primaryGreen.withOpacity(0.08),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
-                          child: const Text(
-                            'View Ledger',
-                            style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Lihat Detail',
+                                style: TextStyle(
+                                  color: AppColors.primaryGreen,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward,
+                                color: AppColors.primaryGreen,
+                                size: 16,
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -464,17 +533,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     const Text(
                       'Pending Approvals',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red.shade50,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         '$pendingApprovals ACTIONS',
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.red.shade700),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.red.shade700,
+                        ),
                       ),
                     ),
                   ],
@@ -485,8 +564,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 16),
         _buildApprovalItem('Aditya Wijaya', 'New Resident • Block C-12'),
-        _buildApprovalItem('Siti Aminah', 'Address Change • Block A-05 to B-02'),
-        _buildApprovalItem('Budi Santoso', 'Venue Booking • Community Center • Oct 28'),
+        _buildApprovalItem(
+          'Siti Aminah',
+          'Address Change • Block A-05 to B-02',
+        ),
+        _buildApprovalItem(
+          'Budi Santoso',
+          'Venue Booking • Community Center • Oct 28',
+        ),
         const SizedBox(height: 32),
 
         // Gate Monitoring
@@ -499,9 +584,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             Row(
               children: [
-                Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
                 const SizedBox(width: 6),
-                const Text('LIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.red)),
+                const Text(
+                  'LIVE',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
               ],
             ),
           ],
@@ -518,11 +617,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         Text(
           value,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         Text(
           label,
-          style: TextStyle(fontSize: 8, color: Colors.white.withOpacity(0.5), letterSpacing: 0.5),
+          style: TextStyle(
+            fontSize: 8,
+            color: Colors.white.withOpacity(0.5),
+            letterSpacing: 0.5,
+          ),
         ),
       ],
     );
@@ -541,24 +648,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           CircleAvatar(
             backgroundColor: AppColors.primaryGreen.withOpacity(0.1),
-            child: const Icon(Icons.person_add_rounded, color: AppColors.primaryGreen, size: 20),
+            child: const Icon(
+              Icons.person_add_rounded,
+              color: AppColors.primaryGreen,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(detail, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                Text(
+                  detail,
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                ),
               ],
             ),
           ),
           Row(
             children: [
-              _buildApprovalButton('Decline', Colors.grey.shade100, Colors.grey.shade700),
+              _buildApprovalButton(
+                'Decline',
+                Colors.grey.shade100,
+                Colors.grey.shade700,
+              ),
               const SizedBox(width: 8),
-              _buildApprovalButton('Approve', AppColors.primaryGreen, Colors.white),
+              _buildApprovalButton(
+                'Approve',
+                AppColors.primaryGreen,
+                Colors.white,
+              ),
             ],
           ),
         ],
@@ -575,7 +703,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: textColor,
+        ),
       ),
     );
   }
@@ -589,7 +721,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             image: const DecorationImage(
-              image: NetworkImage('https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=2044&auto=format&fit=crop'),
+              image: NetworkImage(
+                'https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=2044&auto=format&fit=crop',
+              ),
               fit: BoxFit.cover,
             ),
           ),
@@ -599,21 +733,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 top: 12,
                 left: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(4)),
-                  child: const Text('CAM_01 • MAIN GATE', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'CAM_01 • MAIN GATE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-              const Center(child: Icon(Icons.play_circle_fill_rounded, color: Colors.white38, size: 48)),
+              const Center(
+                child: Icon(
+                  Icons.play_circle_fill_rounded,
+                  color: Colors.white38,
+                  size: 48,
+                ),
+              ),
             ],
           ),
         ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _buildSmallCamera('SIDE_A', 'https://images.unsplash.com/photo-1558002038-103792e37483?q=80&w=2040')),
+            Expanded(
+              child: _buildSmallCamera(
+                'SIDE_A',
+                'https://images.unsplash.com/photo-1558002038-103792e37483?q=80&w=2040',
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _buildSmallCamera('BACK_B', 'https://images.unsplash.com/photo-1620067925053-bc26900e5e01?q=80&w=2040')),
+            Expanded(
+              child: _buildSmallCamera(
+                'BACK_B',
+                'https://images.unsplash.com/photo-1620067925053-bc26900e5e01?q=80&w=2040',
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 20),
@@ -627,7 +790,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: const Color(0xFF1E1E1E),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
         ),
@@ -649,8 +814,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             left: 8,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(4)),
-              child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
+              decoration: BoxDecoration(
+                color: Colors.black45,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ],
@@ -684,7 +859,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 12),
           Text(
             'Productive age residents are dominant this quarter.',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.4),
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+              height: 1.4,
+            ),
           ),
         ],
       ),
@@ -748,14 +927,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               if (tag != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: tagColor!.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     tag,
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green.shade900),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade900,
+                    ),
                   ),
                 )
               else if (isWarga)
@@ -763,10 +949,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: 32,
                   child: Stack(
                     children: [
-                      CircleAvatar(radius: 10, backgroundColor: Colors.blueGrey),
+                      CircleAvatar(
+                        radius: 10,
+                        backgroundColor: Colors.blueGrey,
+                      ),
                       Positioned(
                         left: 12,
-                        child: CircleAvatar(radius: 10, backgroundColor: Colors.grey),
+                        child: CircleAvatar(
+                          radius: 10,
+                          backgroundColor: Colors.grey,
+                        ),
                       ),
                     ],
                   ),
@@ -776,11 +968,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 20),
           Text(
             value,
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight),
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimaryLight,
+            ),
           ),
           Text(
             label,
-            style: const TextStyle(fontSize: 14, color: AppColors.textSecondaryLight),
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondaryLight,
+            ),
           ),
         ],
       ),
@@ -810,22 +1009,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: Colors.white.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.account_balance_wallet_outlined, color: Colors.greenAccent, size: 20),
+                child: const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: Colors.greenAccent,
+                  size: 20,
+                ),
               ),
               Text(
                 trend,
-                style: const TextStyle(fontSize: 10, color: Colors.greenAccent, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.greenAccent,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 24),
           Text(
             value,
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           Text(
             label,
-            style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.6)),
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.6),
+            ),
           ),
         ],
       ),
@@ -837,7 +1051,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -845,7 +1061,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             child: Image.network(
-              data['foto_url'] ?? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2013&auto=format&fit=crop',
+              data['foto_url'] ??
+                  'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2013&auto=format&fit=crop',
               height: 180,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -853,7 +1070,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 height: 180,
                 width: double.infinity,
                 color: Colors.grey.shade300,
-                child: const Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
+                child: const Icon(
+                  Icons.image_not_supported,
+                  size: 40,
+                  color: Colors.grey,
+                ),
               ),
             ),
           ),
@@ -867,23 +1088,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.calendar_today_outlined, size: 12, color: Colors.grey),
+                        const Icon(
+                          Icons.calendar_today_outlined,
+                          size: 12,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 4),
                         Text(
-                          data['created_at'] != null 
-                            ? data['created_at'].toString().split('T')[0] 
-                            : 'Baru saja', 
-                          style: const TextStyle(fontSize: 10, color: Colors.grey)
+                          data['created_at'] != null
+                              ? data['created_at'].toString().split('T')[0]
+                              : 'Baru saja',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.push_pin_outlined, size: 12, color: Colors.grey),
+                        const Icon(
+                          Icons.push_pin_outlined,
+                          size: 12,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 4),
                         Text(
-                          data['nomor_rt'] != null ? 'RT ${data['nomor_rt']}' : 'SEMUA RW', 
-                          style: const TextStyle(fontSize: 10, color: Colors.grey)
+                          data['nomor_rt'] != null
+                              ? 'RT ${data['nomor_rt']}'
+                              : 'SEMUA RW',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
@@ -892,14 +1129,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 12),
                 Text(
                   data['judul'] ?? 'No Title',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, height: 1.3),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    height: 1.3,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   data['konten'] ?? '',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey,
+                    height: 1.5,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 InkWell(
@@ -910,15 +1155,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       content: data['konten'] ?? '',
                       isKegiatan: data['is_kegiatan'] == true,
                       tanggalKegiatan: data['tanggal_kegiatan']?.toString(),
-                      createdAtStr: data['created_at']?.toString().split('T')[0],
+                      createdAtStr: data['created_at']?.toString().split(
+                        'T',
+                      )[0],
                       fotoUrl: data['foto_url'],
                     );
                   },
                   child: Row(
                     children: [
-                      const Text('Baca Selengkapnya', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold, fontSize: 13)),
+                      const Text(
+                        'Baca Selengkapnya',
+                        style: TextStyle(
+                          color: AppColors.primaryGreen,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.arrow_forward_rounded, color: AppColors.primaryGreen, size: 14),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: AppColors.primaryGreen,
+                        size: 14,
+                      ),
                     ],
                   ),
                 ),
@@ -954,11 +1212,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
               child: Icon(
-                data['is_kegiatan'] == true ? Icons.event_note : Icons.campaign_outlined, 
-                color: AppColors.primaryGreen, 
-                size: 24
+                data['is_kegiatan'] == true
+                    ? Icons.event_note
+                    : Icons.campaign_outlined,
+                color: AppColors.primaryGreen,
+                size: 24,
               ),
             ),
             const SizedBox(width: 16),
@@ -967,17 +1230,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    data['is_kegiatan'] == true ? 'KEGIATAN' : 'PENGUMUMAN', 
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)
+                    data['is_kegiatan'] == true ? 'KEGIATAN' : 'PENGUMUMAN',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
                   ),
                   Text(
-                    data['judul'] ?? '', 
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    data['judul'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    data['konten'] ?? '', 
+                    data['konten'] ?? '',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -994,7 +1264,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildFinancialStatusList(List statusList) {
     if (statusList.isEmpty) return _buildEmptyState('Data RT belum tersedia.');
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1005,10 +1275,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           ...statusList.map((item) {
             final rt = item['rt']?.toString() ?? 'RT ??';
-            final percentage = double.tryParse(item['percentage']?.toString() ?? '0') ?? 0.0;
+            final percentage =
+                double.tryParse(item['percentage']?.toString() ?? '0') ?? 0.0;
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: _buildFinancialRow(rt, percentage, percentage > 0.5 ? Colors.green : Colors.orange),
+              child: _buildFinancialRow(
+                rt,
+                percentage,
+                percentage > 0.5 ? Colors.green : Colors.orange,
+              ),
             );
           }).toList(),
           const SizedBox(height: 8),
@@ -1035,14 +1310,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: Colors.greenAccent.withOpacity(0.3),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(rt, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          child: Text(
+            rt,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('${(percentage * 100).toInt()}%', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+              Text(
+                '${(percentage * 100).toInt()}%',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 4),
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
@@ -1076,9 +1360,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               const Row(
                 children: [
-                   Icon(Icons.feed_outlined, color: AppColors.primaryGreen, size: 20),
-                   SizedBox(width: 8),
-                   Text('Aspirasi Masuk', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Icon(
+                    Icons.feed_outlined,
+                    color: AppColors.primaryGreen,
+                    size: 20,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Aspirasi Masuk',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               TextButton(
@@ -1089,20 +1380,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
                 child: const Text(
                   'Lihat Semua',
-                  style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold, fontSize: 13),
+                  style: TextStyle(
+                    color: AppColors.primaryGreen,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           if (complaints.isEmpty)
-             _buildEmptyState('Belum ada aspirasi masuk.')
+            _buildEmptyState('Belum ada aspirasi masuk.')
           else
-            ...complaints.map((c) => _buildAspirationItem(
-              c['pelapor_nama'] ?? 'Warga', 
-              'RT ${c['nomor_rt']}', 
-              c['judul'] ?? 'No Title'
-            )).toList(),
+            ...complaints
+                .map(
+                  (c) => _buildAspirationItem(
+                    c['pelapor_nama'] ?? 'Warga',
+                    'RT ${c['nomor_rt']}',
+                    c['judul'] ?? 'No Title',
+                  ),
+                )
+                .toList(),
         ],
       ),
     );
@@ -1116,7 +1415,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Icon(Icons.info_outline, color: Colors.grey.shade400, size: 32),
             const SizedBox(height: 8),
-            Text(message, style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+            Text(
+              message,
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+            ),
           ],
         ),
       ),
@@ -1139,12 +1441,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
               CircleAvatar(
                 radius: 12,
                 backgroundColor: AppColors.primaryGreen.withOpacity(0.1),
-                child: const Icon(Icons.person, size: 14, color: AppColors.primaryGreen),
+                child: const Icon(
+                  Icons.person,
+                  size: 14,
+                  color: AppColors.primaryGreen,
+                ),
               ),
               const SizedBox(width: 8),
-              Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              Text(
+                name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
               const Spacer(),
-              Text(detail, style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+              Text(
+                detail,
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -1167,7 +1482,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.pending_actions_rounded, size: 100, color: Colors.orange),
+              const Icon(
+                Icons.pending_actions_rounded,
+                size: 100,
+                color: Colors.orange,
+              ),
               const SizedBox(height: 24),
               const Text(
                 'Akun Menunggu Verifikasi',

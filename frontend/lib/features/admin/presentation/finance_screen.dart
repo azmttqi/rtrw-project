@@ -52,24 +52,30 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   String _formatRp(dynamic val) {
     if (val == null) return 'Rp 0';
-    final double amount = val is double ? val : (val is int ? val.toDouble() : double.tryParse(val.toString()) ?? 0.0);
+    final double amount = val is double
+        ? val
+        : (val is int
+              ? val.toDouble()
+              : double.tryParse(val.toString()) ?? 0.0);
     return 'Rp ${NumberFormat('#,###', 'id').format(amount)}';
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
-    
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.primaryGreen,
         child: _loading
-            ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.primaryGreen),
+              )
             : _error != null
-                ? _buildError()
-                : _buildContent(auth),
+            ? _buildError()
+            : _buildContent(auth),
       ),
     );
   }
@@ -87,7 +93,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   Widget _buildContent(AuthProvider auth) {
     final s = _summary!;
     final totalKas = s['total_kas'] ?? 0.0;
-    
+
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(24),
@@ -99,7 +105,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                auth.isRW ? 'MANAJEMEN KEUANGAN' : (auth.isRT ? 'KEUANGAN RT' : 'KEUANGAN PRIBADI'),
+                auth.isRW
+                    ? 'MANAJEMEN KEUANGAN'
+                    : (auth.isRT ? 'KEUANGAN RT' : 'KEUANGAN PRIBADI'),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -108,7 +116,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 ),
               ),
               if (auth.isRT)
-                const Icon(Icons.notifications_none_rounded, color: Colors.grey),
+                const Icon(
+                  Icons.notifications_none_rounded,
+                  color: Colors.grey,
+                ),
             ],
           ),
           const SizedBox(height: 24),
@@ -136,9 +147,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  auth.isRW 
-                      ? 'TOTAL KAS RUKUN WARGA' 
-                      : (auth.isRT ? 'TOTAL SALDO KAS RT' : 'TOTAL IURAN TERBAYAR'),
+                  auth.isRW
+                      ? 'TOTAL KAS RUKUN WARGA'
+                      : (auth.isRT
+                            ? 'TOTAL SALDO KAS RT'
+                            : 'TOTAL IURAN TERBAYAR'),
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -159,18 +172,29 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.trending_up, color: Colors.white, size: 16),
+                          const Icon(
+                            Icons.trending_up,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '+${_formatRp(s['pemasukan_bulan_ini'])}',
-                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -178,12 +202,18 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     if (auth.isRT) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text('Bank Mandiri', style: TextStyle(color: Colors.white, fontSize: 11)),
+                        child: const Text(
+                          'Bank Mandiri',
+                          style: TextStyle(color: Colors.white, fontSize: 11),
+                        ),
                       ),
                     ],
                     const Spacer(),
@@ -193,11 +223,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: AppColors.primaryGreen,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           elevation: 0,
                         ),
-                        child: const Text('Kirim Laporan', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'Kirim Laporan',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                   ],
                 ),
@@ -219,22 +257,34 @@ class _FinanceScreenState extends State<FinanceScreen> {
             const SizedBox(height: 32),
             // Warga specific view could go here, for now using transaction list below
           ],
-          
+
           const SizedBox(height: 32),
           const Text(
             'Transaksi Terakhir',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimaryLight,
+            ),
           ),
           const SizedBox(height: 16),
-          
+
           if ((s['transaksi_terbaru'] as List?)?.isEmpty ?? true)
-            const Center(child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Text('Belum ada transaksi', style: TextStyle(color: Colors.grey)),
-            ))
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text(
+                  'Belum ada transaksi',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            )
           else
-            ...List<Map<String, dynamic>>.from(s['transaksi_terbaru'] ?? []).map((tx) {
-              final isPositive = true; // For now assuming all additions for RT/RW dues
+            ...List<Map<String, dynamic>>.from(
+              s['transaksi_terbaru'] ?? [],
+            ).map((tx) {
+              final isPositive =
+                  true; // For now assuming all additions for RT/RW dues
               final String title;
               if (tx['tipe'] == 'RT') {
                 title = 'Iuran RT ${tx['nomor_rt']}';
@@ -242,14 +292,15 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 title = 'Iuran ${tx['nama_pembayar']}';
               }
               return _buildTransactionItem(
-                title, 
-                _formatRp(tx['nominal']), 
-                tx['dibayar_pada']?.split('T')[0] ?? '${tx['bulan']}/${tx['tahun']}', 
+                title,
+                _formatRp(tx['nominal']),
+                tx['dibayar_pada']?.split('T')[0] ??
+                    '${tx['bulan']}/${tx['tahun']}',
                 isPositive,
                 isVerified: auth.isRT,
               );
             }).toList(),
-          
+
           const SizedBox(height: 40),
         ],
       ),
@@ -260,20 +311,87 @@ class _FinanceScreenState extends State<FinanceScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F1),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade100),
       ),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(color: AppColors.primaryGreen, shape: BoxShape.circle),
-            child: const Icon(Icons.note_add_outlined, color: Colors.white, size: 28),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 24,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryGreen.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: const Icon(
+                  Icons.note_add_outlined,
+                  color: AppColors.primaryGreen,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 20),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Upload Bukti Pengeluaran',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimaryLight,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Unggah foto atau dokumen bukti transaksi untuk transparansi kas.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Upload Bukti Pengeluaran',
-            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: AppColors.primaryGreen.withOpacity(0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Upload Sekarang',
+                    style: TextStyle(
+                      color: AppColors.primaryGreen,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward,
+                    color: AppColors.primaryGreen,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -284,7 +402,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final sudah = s['sudah_bayar'] ?? 0;
     final total = s['total_kk'] ?? 0;
     final belum = total - sudah;
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -298,26 +416,61 @@ class _FinanceScreenState extends State<FinanceScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-               Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Status Iuran Warga', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text('${_summary?['bulan']}/${_summary?['tahun']}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  const Text(
+                    'Status Iuran Warga',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '${_summary?['bulan']}/${_summary?['tahun']}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(20)),
-                child: Text('Oktober 2023', style: TextStyle(color: Colors.green.shade700, fontSize: 10, fontWeight: FontWeight.bold)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Oktober 2023',
+                  style: TextStyle(
+                    color: Colors.green.shade700,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 24),
           Row(
             children: [
-              Expanded(child: _buildDuesCounter('Sudah Bayar', sudah.toString(), '$total KK', Colors.green, total)),
+              Expanded(
+                child: _buildDuesCounter(
+                  'Sudah Bayar',
+                  sudah.toString(),
+                  '$total KK',
+                  Colors.green,
+                  total,
+                ),
+              ),
               const SizedBox(width: 24),
-              Expanded(child: _buildDuesCounter('Belum Bayar', belum.toString(), '$total KK', Colors.redAccent, total)),
+              Expanded(
+                child: _buildDuesCounter(
+                  'Belum Bayar',
+                  belum.toString(),
+                  '$total KK',
+                  Colors.redAccent,
+                  total,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -327,8 +480,17 @@ class _FinanceScreenState extends State<FinanceScreen> {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Lihat Detail Warga', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
-                  Icon(Icons.chevron_right_rounded, color: AppColors.primaryGreen),
+                  Text(
+                    'Lihat Detail Warga',
+                    style: TextStyle(
+                      color: AppColors.primaryGreen,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.primaryGreen,
+                  ),
                 ],
               ),
             ),
@@ -338,7 +500,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
-  Widget _buildDuesCounter(String label, String count, String totalLabel, Color color, int totalVal) {
+  Widget _buildDuesCounter(
+    String label,
+    String count,
+    String totalLabel,
+    Color color,
+    int totalVal,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -348,9 +516,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
           children: [
-            Text(count, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: color)),
+            Text(
+              count,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
             const SizedBox(width: 4),
-            Text('/ $totalLabel', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(
+              '/ $totalLabel',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -377,11 +555,24 @@ class _FinanceScreenState extends State<FinanceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Ringkasan Kas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'Ringkasan Kas',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 20),
-          _buildSummaryRow(Icons.arrow_circle_down_rounded, 'Pemasukan', _formatRp(s['total_kas']), Colors.green),
+          _buildSummaryRow(
+            Icons.arrow_circle_down_rounded,
+            'Pemasukan',
+            _formatRp(s['total_kas']),
+            Colors.green,
+          ),
           const SizedBox(height: 12),
-          _buildSummaryRow(Icons.arrow_circle_up_rounded, 'Pengeluaran', _formatRp(s['total_disetor_ke_rw'] ?? 0), Colors.redAccent),
+          _buildSummaryRow(
+            Icons.arrow_circle_up_rounded,
+            'Pengeluaran',
+            _formatRp(s['total_disetor_ke_rw'] ?? 0),
+            Colors.redAccent,
+          ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Divider(),
@@ -389,8 +580,18 @@ class _FinanceScreenState extends State<FinanceScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Saldo Kas', style: TextStyle(fontWeight: FontWeight.bold)),
-              Text(_formatRp(s['total_kas'] - (s['total_disetor_ke_rw'] ?? 0)), style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryGreen, fontSize: 18)),
+              const Text(
+                'Saldo Kas',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                _formatRp(s['total_kas'] - (s['total_disetor_ke_rw'] ?? 0)),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primaryGreen,
+                  fontSize: 18,
+                ),
+              ),
             ],
           ),
         ],
@@ -398,21 +599,29 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
-  Widget _buildSummaryRow(IconData icon, String label, String amount, Color color) {
+  Widget _buildSummaryRow(
+    IconData icon,
+    String label,
+    String amount,
+    Color color,
+  ) {
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
         const SizedBox(width: 8),
         Text(label, style: const TextStyle(fontSize: 13)),
         const Spacer(),
-        Text(amount, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        Text(
+          amount,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
       ],
     );
   }
 
   Widget _buildRWFineBody(BuildContext context, Map<String, dynamic> s) {
     final List rtList = s['rt_dues_status'] ?? [];
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -422,7 +631,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
           children: [
             const Text(
               'Arus Kas Bulanan',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimaryLight,
+              ),
             ),
             Row(
               children: [
@@ -443,7 +656,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
             border: Border.all(color: Colors.grey.shade100),
           ),
           child: Center(
-            child: Text('Chart Visualisation (Coming Soon)', style: TextStyle(color: Colors.grey.shade400)),
+            child: Text(
+              'Chart Visualisation (Coming Soon)',
+              style: TextStyle(color: Colors.grey.shade400),
+            ),
           ),
         ),
         const SizedBox(height: 32),
@@ -454,33 +670,50 @@ class _FinanceScreenState extends State<FinanceScreen> {
           children: [
             const Text(
               'Status Iuran RT',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimaryLight),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimaryLight,
+              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AturTagihanScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const AturTagihanScreen(),
+                  ),
                 );
               },
-              child: const Text('Kelola Tagihan', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Kelola Tagihan',
+                style: TextStyle(
+                  color: AppColors.primaryGreen,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 16),
         if (rtList.isEmpty)
-          const Center(child: Text('Tidak ada data RT', style: TextStyle(color: Colors.grey)))
+          const Center(
+            child: Text(
+              'Tidak ada data RT',
+              style: TextStyle(color: Colors.grey),
+            ),
+          )
         else
           ...rtList.map((rt) {
             Color color = Colors.green;
             if (rt['status'] == 'BELUM_BAYAR') color = Colors.red;
             if (rt['status'] == 'HAMPIR_JATUH_TEMPO') color = Colors.orange;
-            
+
             return _buildRtStatusItem(
-              'RT ${rt['nomor_rt']} / RW ${_summary?['nomor_rw'] ?? '08'}', 
-              'Ketua: ${rt['nama_ketua']}', 
-              rt['status'].replaceAll('_', ' '), 
-              color
+              'RT ${rt['nomor_rt']} / RW ${_summary?['nomor_rw'] ?? '08'}',
+              'Ketua: ${rt['nama_ketua']}',
+              rt['status'].replaceAll('_', ' '),
+              color,
             );
           }).toList(),
       ],
@@ -496,12 +729,21 @@ class _FinanceScreenState extends State<FinanceScreen> {
       ),
       child: Text(
         label,
-        style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
-  Widget _buildRtStatusItem(String title, String subtitle, String status, Color color) {
+  Widget _buildRtStatusItem(
+    String title,
+    String subtitle,
+    String status,
+    Color color,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -515,30 +757,64 @@ class _FinanceScreenState extends State<FinanceScreen> {
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-            child: Center(child: Text(title.substring(3, 5), style: TextStyle(color: color, fontWeight: FontWeight.bold))),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                title.substring(3, 5),
+                style: TextStyle(color: color, fontWeight: FontWeight.bold),
+              ),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text(subtitle, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                ),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-            child: Text(status, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 10)),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTransactionItem(String title, String amount, String date, bool isPositive, {bool isVerified = false, bool hasEvidence = false}) {
+  Widget _buildTransactionItem(
+    String title,
+    String amount,
+    String date,
+    bool isPositive, {
+    bool isVerified = false,
+    bool hasEvidence = false,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -551,33 +827,82 @@ class _FinanceScreenState extends State<FinanceScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: (isPositive ? Colors.green : Colors.orange).withOpacity(0.1), shape: BoxShape.circle),
-            child: Icon(isPositive ? Icons.account_balance_wallet_rounded : Icons.construction_rounded, color: isPositive ? Colors.green : Colors.orange, size: 20),
+            decoration: BoxDecoration(
+              color: (isPositive ? Colors.green : Colors.orange).withOpacity(
+                0.1,
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isPositive
+                  ? Icons.account_balance_wallet_rounded
+                  : Icons.construction_rounded,
+              color: isPositive ? Colors.green : Colors.orange,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    Text(date, style: TextStyle(color: Colors.grey.shade400, fontSize: 10)),
+                    Text(
+                      date,
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 10,
+                      ),
+                    ),
                     if (isVerified) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(4)),
-                        child: Text('TERVERIFIKASI', style: TextStyle(color: Colors.green.shade700, fontSize: 7, fontWeight: FontWeight.bold)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'TERVERIFIKASI',
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                     if (hasEvidence) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(4)),
-                        child: Text('BUKTI TERLAMPIR', style: TextStyle(color: Colors.orange.shade700, fontSize: 7, fontWeight: FontWeight.bold)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'BUKTI TERLAMPIR',
+                          style: TextStyle(
+                            color: Colors.orange.shade700,
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ],
