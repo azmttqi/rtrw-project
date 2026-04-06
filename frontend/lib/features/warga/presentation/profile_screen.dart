@@ -2,148 +2,165 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../auth/logic/auth_provider.dart';
 
-class WargaProfileScreen extends StatelessWidget {
+class WargaProfileScreen extends StatefulWidget {
   const WargaProfileScreen({super.key});
+
+  @override
+  State<WargaProfileScreen> createState() => _WargaProfileScreenState();
+}
+
+class _WargaProfileScreenState extends State<WargaProfileScreen> {
+  Future<void> _refreshData() async {
+    await context.read<AuthProvider>().refreshProfile();
+  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.user;
-    final String nama = user?['nama'] ?? 'Budi Santoso';
-    final String address = 'Blok C-12, RT 04'; // Placeholder as per mockup
+    final String nama = user?['nama'] ?? 'User';
+    final String role = user?['role'] ?? 'WARGA';
+    final String address = user?['alamat'] ?? 'Alamat belum diatur';
+    final bool isVerified = user?['is_verified'] ?? false;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FCF8),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            const SizedBox(height: 32),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        color: const Color(0xFF076633),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              const SizedBox(height: 32),
 
-            // Profile Info Section
-            Center(
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF39C12),
-                          borderRadius: BorderRadius.circular(32),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(32),
-                          child: Image.network(
-                            'https://api.dicebear.com/7.x/avataaars/png?seed=$nama',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
+              // Profile Info Section
+              Center(
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          width: 120,
+                          height: 120,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF4CB050),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.white, width: 2),
+                            color: const Color(0xFFF39C12),
+                            borderRadius: BorderRadius.circular(32),
                           ),
-                          child: const Icon(Icons.verified, color: Colors.white, size: 14),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(32),
+                            child: Image.network(
+                              'https://api.dicebear.com/7.x/avataaars/png?seed=$nama',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        if (isVerified)
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4CB050),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: const Icon(Icons.verified, color: Colors.white, size: 14),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      nama,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1B1B1B),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.location_on, color: Colors.grey, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          address,
+                          style: const TextStyle(color: Colors.grey, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isVerified ? const Color(0xFFC7EBCB) : Colors.orange.shade100,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        isVerified ? role : 'MENUNGGU VERIFIKASI',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: isVerified ? const Color(0xFF076633) : Colors.orange.shade900,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    nama,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1B1B1B),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.location_on, color: Colors.grey, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        address,
-                        style: const TextStyle(color: Colors.grey, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFC7EBCB),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'WARGA TETAP',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF076633),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Stats Row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        'Warga',
+                        'STATUS\nKEPENDUDUKAN',
+                        Icons.home_outlined,
+                        const Color(0xFFF1FDF4),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Stats Row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      '4',
-                      'ANGGOTA\nKELUARGA',
-                      Icons.hub_outlined,
-                      const Color(0xFFF1FDF4),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        isVerified ? 'Terverifikasi' : 'Proses',
+                        'VERIFIKASI\nIDENTITAS',
+                        Icons.verified_user_outlined,
+                        isVerified ? const Color(0xFFE8F5E9) : Colors.orange.shade50,
+                        isVerified: isVerified,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(
-                      'Status\nTerverifikasi',
-                      'Sesuai Data\nDisdukcapil',
-                      Icons.verified_user_outlined,
-                      const Color(0xFFE8F5E9),
-                      isVerified: true,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
+              const SizedBox(height: 32),
 
-            // Menu Groups
-            _buildMenuGroup('AKUN', [
-              _buildMenuItem(Icons.person_outline, 'Ubah Profil'),
-              _buildMenuItem(Icons.security_outlined, 'Pengaturan Keamanan'),
-            ]),
-            const SizedBox(height: 24),
-            _buildMenuGroup('DATA WARGA', [
-              _buildMenuItem(Icons.work_outline, 'Dokumen Saya', subtitle: 'KTP, KK, & Surat Nikah'),
-              _buildMenuItem(Icons.people_outline, 'Anggota Keluarga'),
-            ]),
-            const SizedBox(height: 24),
-            _buildMenuGroup('BANTUAN & LAINNYA', [
-              _buildMenuItem(Icons.help_outline, 'Pusat Bantuan'),
-              _buildMenuItem(Icons.home_outlined, 'Hubungi RT'),
-              _buildMenuItem(Icons.logout, 'Keluar', isDestructive: true, onTap: () => _showLogoutDialog(context, authProvider)),
-            ]),
-            const SizedBox(height: 40),
-          ],
+              // Menu Groups
+              _buildMenuGroup('AKUN', [
+                _buildMenuItem(Icons.person_outline, 'Ubah Profil'),
+                _buildMenuItem(Icons.security_outlined, 'Pengaturan Keamanan'),
+              ]),
+              const SizedBox(height: 24),
+              _buildMenuGroup('DATA WARGA', [
+                _buildMenuItem(Icons.work_outline, 'Dokumen Saya', subtitle: 'KTP, KK, & Surat Nikah'),
+                _buildMenuItem(Icons.people_outline, 'Anggota Keluarga'),
+              ]),
+              const SizedBox(height: 24),
+              _buildMenuGroup('BANTUAN & LAINNYA', [
+                _buildMenuItem(Icons.help_outline, 'Pusat Bantuan'),
+                _buildMenuItem(Icons.home_outlined, 'Hubungi RT'),
+                _buildMenuItem(Icons.logout, 'Keluar', isDestructive: true, onTap: () => _showLogoutDialog(context, authProvider)),
+              ]),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );

@@ -1,80 +1,122 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import '../../dues/logic/due_provider.dart';
 
-class WargaFinanceScreen extends StatelessWidget {
+class WargaFinanceScreen extends StatefulWidget {
   const WargaFinanceScreen({super.key});
+
+  @override
+  State<WargaFinanceScreen> createState() => _WargaFinanceScreenState();
+}
+
+class _WargaFinanceScreenState extends State<WargaFinanceScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DueProvider>().fetchDuesHistory();
+    });
+  }
+
+  Future<void> _refreshData() async {
+    await context.read<DueProvider>().fetchDuesHistory();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FCF8),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            // Header Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: const Text(
-                'Keuangan Saya',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF076633),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        color: const Color(0xFF076633),
+        child: Consumer<DueProvider>(
+          builder: (context, dueProvider, _) {
+            if (dueProvider.isLoading && dueProvider.duesHistory.isEmpty) {
+              return const Center(child: CircularProgressIndicator(color: Color(0xFF076633)));
+            }
 
-            // Current Bill Card
-            _buildCurrentBillCard(),
-            const SizedBox(height: 24),
+            final latestDue = dueProvider.duesHistory.isNotEmpty 
+                ? dueProvider.duesHistory.firstWhere((d) => d.status == 'PENDING' || d.status == 'BELUM_BAYAR', orElse: () => dueProvider.duesHistory.first)
+                : null;
+            final isPending = latestDue != null && (latestDue.status == 'PENDING' || latestDue.status == 'BELUM_BAYAR');
 
-            // Community Fund Card
-            _buildCommunityFundCard(),
-            const SizedBox(height: 32),
-
-            // Community Spending Section
-            _buildSpendingSection(),
-            const SizedBox(height: 24),
-
-            // Audit Banner
-            _buildAuditBanner(),
-            const SizedBox(height: 32),
-
-            // Payment History Section
-            _buildPaymentHistory(),
-            const SizedBox(height: 24),
-
-            // Download Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.file_download_outlined, size: 20),
-                  label: const Text('Unduh Rekap Tahunan'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE8ECEF),
-                    foregroundColor: const Color(0xFF076633),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  // Header Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: const Text(
+                      'Keuangan Saya',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF076633),
+                      ),
                     ),
-                    elevation: 0,
                   ),
-                ),
+                  const SizedBox(height: 24),
+
+                  // Current Bill Card
+                  _buildCurrentBillCard(latestDue, isPending),
+                  const SizedBox(height: 24),
+
+                  // Community Fund Card
+                  _buildCommunityFundCard(),
+                  const SizedBox(height: 32),
+
+                  // Community Spending Section
+                  _buildSpendingSection(),
+                  const SizedBox(height: 24),
+
+                  // Audit Banner
+                  _buildAuditBanner(),
+                  const SizedBox(height: 32),
+
+                  // Payment History Section
+                  _buildPaymentHistory(dueProvider),
+                  const SizedBox(height: 24),
+
+                  // Download Button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.file_download_outlined, size: 20),
+                        label: const Text('Unduh Rekap Tahunan'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE8ECEF),
+                          foregroundColor: const Color(0xFF076633),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
               ),
-            ),
-            const SizedBox(height: 40),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildCurrentBillCard() {
+  Widget _buildCurrentBillCard(dynamic latestDue, bool isPending) {
+    final amount = latestDue != null ? latestDue.amount : 0.0;
+    final month = latestDue != null ? latestDue.month : '-';
+    final year = latestDue != null ? latestDue.year : '';
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(24),
@@ -100,7 +142,7 @@ class WargaFinanceScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'TAGIHAN BULAN INI',
+            'TAGIHAN AKTIF',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -109,9 +151,9 @@ class WargaFinanceScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Rp 150.000',
-            style: TextStyle(
+          Text(
+            NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(amount),
+            style: const TextStyle(
               fontSize: 36,
               fontWeight: FontWeight.w900,
               color: Colors.white,
@@ -119,14 +161,14 @@ class WargaFinanceScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Row(
-            children: const [
-              Text(
-                'Batas Waktu: ',
+            children: [
+              const Text(
+                'Periode: ',
                 style: TextStyle(fontSize: 13, color: Colors.white70),
               ),
               Text(
-                '10 Oktober 2023',
-                style: TextStyle(
+                isPending ? '$month $year' : 'Semua Lunas',
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -137,20 +179,39 @@ class WargaFinanceScreen extends StatelessWidget {
           const SizedBox(height: 24),
           Row(
             children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.account_balance_wallet_outlined, size: 18),
-                  label: const Text('Bayar Sekarang', style: TextStyle(fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF076633),
-                    shadowColor: Colors.transparent,
+              if (isPending)
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      // Action bayar
+                    },
+                    icon: const Icon(Icons.account_balance_wallet_outlined, size: 18),
+                    label: const Text('Bayar Sekarang', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF076633),
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                )
+              else
+                Expanded(
+                  child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'TERBAYAR LUNAS',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
                 ),
-              ),
               const SizedBox(width: 12),
               Column(
                 children: [
@@ -356,7 +417,13 @@ class WargaFinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentHistory() {
+  Widget _buildPaymentHistory(DueProvider provider) {
+    if (provider.duesHistory.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final history = provider.duesHistory.where((d) => d.status == 'LUNAS').toList();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -375,14 +442,19 @@ class WargaFinanceScreen extends StatelessWidget {
                 BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 20, offset: const Offset(0, 10)),
               ],
             ),
-            child: Column(
-              children: [
-                _buildHistoryItem('September 2023', 'Dibayar pada 05 Sep 2023', 'Rp 150.000'),
-                const Divider(height: 1, indent: 24, endIndent: 24),
-                _buildHistoryItem('Agustus 2023', 'Dibayar pada 02 Aug 2023', 'Rp 150.000'),
-                const Divider(height: 1, indent: 24, endIndent: 24),
-                _buildHistoryItem('Juli 2023', 'Dibayar pada 10 Jul 2023', 'Rp 150.000'),
-              ],
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: history.length,
+              separatorBuilder: (context, index) => const Divider(height: 1, indent: 24, endIndent: 24),
+              itemBuilder: (context, index) {
+                final d = history[index];
+                return _buildHistoryItem(
+                  '${d.month} ${d.year}',
+                  'Dibayar pada ${d.paidAt != null ? DateFormat('dd MMM yyyy').format(d.paidAt!) : '-'}',
+                  NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(d.amount),
+                );
+              },
             ),
           ),
         ],

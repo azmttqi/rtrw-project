@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../widgets/molecules/custom_bottom_navbar.dart';
 import '../../../../widgets/molecules/custom_top_app_bar.dart';
+import '../../announcements/logic/announcement_provider.dart';
+import '../../announcements/presentation/widgets/announcement_detail_modal.dart';
+import '../../dues/logic/due_provider.dart';
 import 'inbox_screen.dart';
 import 'finance_screen.dart';
 import 'profile_screen.dart';
@@ -15,6 +20,22 @@ class WargaDashboardScreen extends StatefulWidget {
 
 class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshData();
+    });
+  }
+
+  Future<void> _refreshData() async {
+    if (!mounted) return;
+    await Future.wait([
+      context.read<DueProvider>().fetchDuesHistory(),
+      context.read<AnnouncementProvider>().fetchAnnouncements(),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,60 +71,99 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
 
   Widget _buildHomeOverview(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () async {
-        // Implement refresh logic if needed
-      },
+      onRefresh: _refreshData,
       color: AppColors.primaryGreen,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 24),
-            _buildKeuanganCard(),
-            _buildSectionHeader('Bantuan & Layanan', null),
-            const SizedBox(height: 16),
-            _buildMenuUtama(),
-            const SizedBox(height: 32),
-            _buildSectionHeader('Pembaruan Komunitas', 'Lihat Semua'),
-            const SizedBox(height: 16),
-            _buildKomunitasCard(
-              'RAPAT RT',
-              'Hari ini, 20:30 WIB',
-              'Koordinasi Bulanan Warga & Pengarahan Keamanan',
-              'Agenda: Persiapan HUT RI ke-78 dan jadwal baru pengelolaan sampah...',
-              Colors.greenAccent.shade700,
-            ),
-            const SizedBox(height: 16),
-            _buildKomunitasCard(
-              'PERBAIKAN',
-              '24 Apr 2023',
-              'Perbaikan Paving Block di Blok C & D',
-              'Penutupan jalan sementara akan dilakukan pukul 09:00 hingga 15:00 WIB. Mohon...',
-              Colors.tealAccent.shade700,
-            ),
-            const SizedBox(height: 32),
-            _buildSectionHeader('Pantauan CCTV', null),
-            const SizedBox(height: 16),
-            _buildCCTVCard(),
-            const SizedBox(height: 32),
-            _buildSectionHeader(
-              'Fasilitas Warga',
-              'Cek ketersediaan dan pesan',
-            ),
-            const SizedBox(height: 16),
-            _buildFasilitasGrid(),
-            const SizedBox(height: 32),
-            _buildSuratBanner(),
-            const SizedBox(height: 40),
-          ],
+        child: Consumer2<DueProvider, AnnouncementProvider>(
+          builder: (context, dueProvider, announcementProvider, _) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 24),
+                _buildKeuanganCard(dueProvider),
+                _buildSectionHeader('Bantuan & Layanan', null),
+                const SizedBox(height: 16),
+                _buildMenuUtama(),
+                const SizedBox(height: 32),
+                _buildSectionHeader('Pembaruan Komunitas', 'Lihat Semua'),
+                const SizedBox(height: 16),
+                _buildAnnouncementList(announcementProvider),
+                const SizedBox(height: 32),
+                _buildSectionHeader('Pantauan CCTV', null),
+                const SizedBox(height: 16),
+                _buildCCTVCard(),
+                const SizedBox(height: 32),
+                _buildSectionHeader(
+                  'Fasilitas Warga',
+                  'Cek ketersediaan dan pesan',
+                ),
+                const SizedBox(height: 16),
+                _buildFasilitasGrid(),
+                const SizedBox(height: 32),
+                _buildSuratBanner(),
+                const SizedBox(height: 40),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildKeuanganCard() {
+  Widget _buildAnnouncementList(AnnouncementProvider provider) {
+    if (provider.isLoading && provider.announcements.isEmpty) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen));
+    }
+
+    if (provider.announcements.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Center(child: Text('Belum ada pengumuman terbaru.', style: TextStyle(color: Colors.grey))),
+      );
+    }
+
+    // Show top 2 announcements
+    final latest = provider.announcements.take(2).toList();
+
+    return Column(
+      children: latest.map((a) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: InkWell(
+            onTap: () => AnnouncementDetailModal.show(
+              context,
+              title: a.title,
+              content: a.content,
+              isKegiatan: a.isKegiatan,
+              fotoUrl: a.fotoUrl,
+              authorName: 'Admin RT',
+              category: a.isKegiatan ? 'KEGIATAN' : 'PENGUMUMAN',
+            ),
+            child: _buildKomunitasCard(
+              a.isKegiatan ? 'KEGIATAN' : 'PENGUMUMAN',
+              DateFormat('d MMM yyyy').format(a.createdAt),
+              a.title,
+              a.content,
+              a.isKegiatan ? Colors.greenAccent.shade700 : Colors.tealAccent.shade700,
+              fotoUrl: a.fotoUrl,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildKeuanganCard(DueProvider provider) {
+    final latestDue = provider.duesHistory.isNotEmpty ? provider.duesHistory.first : null;
+    final billAmount = latestDue != null && latestDue.status == 'PENDING' ? latestDue.amount : 0;
+    final isPending = latestDue != null && latestDue.status == 'PENDING';
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -139,10 +199,10 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
                   color: const Color(0xFFFFEBD5),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  'MENUNGGU',
+                child: Text(
+                  isPending ? 'MENUNGGU' : 'LUNAS',
                   style: TextStyle(
-                    color: Color(0xFFD4822B),
+                    color: isPending ? const Color(0xFFD4822B) : const Color(0xFF2E7D32),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -151,17 +211,17 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
-            'IDR 150.000',
-            style: TextStyle(
+          Text(
+            NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(billAmount),
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Color(0xFF4CAF50),
             ),
           ),
-          const Text(
-            'Jatuh tempo 10 Okt 2023',
-            style: TextStyle(color: Colors.grey, fontSize: 12),
+          Text(
+            isPending ? 'Segera lakukan pembayaran' : 'Semua tagihan sudah terbayar',
+            style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const Text(
             '• Iuran Keamanan & Kebersihan',
@@ -333,8 +393,9 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
     String date,
     String title,
     String desc,
-    Color tagColor,
-  ) {
+    Color tagColor, {
+    String? fotoUrl,
+  }) {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -347,17 +408,24 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
           Container(
             height: 140,
             width: double.infinity,
-            color: Colors.black26,
-            child: const Center(
-              child: Text(
-                'RV',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            decoration: BoxDecoration(
+              color: Colors.black26,
+              image: fotoUrl != null && fotoUrl.isNotEmpty
+                  ? DecorationImage(image: NetworkImage(fotoUrl), fit: BoxFit.cover)
+                  : null,
             ),
+            child: fotoUrl == null || fotoUrl.isEmpty
+                ? const Center(
+                    child: Text(
+                      'RTRW',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                : null,
           ),
           Padding(
             padding: const EdgeInsets.all(16),
