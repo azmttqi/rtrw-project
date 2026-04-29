@@ -5,8 +5,7 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || 'karawang3',
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 5433,
-  database: process.env.NODE_ENV === 'test' ? 'rtrw_test' : (process.env.DB_NAME || 'rtrw'),
+  database: 'rtrw_test', // HARDCODED for testing isolation
 });
 
 module.exports = pool;
-

@@ -1,0 +1,71 @@
+name: Codecov Workflow
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  test-and-coverage:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: rtrw_test
+          POSTGRES_PASSWORD: karawang3
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install Backend Dependencies
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Install QA Automation Dependencies
+      working-directory: ./qa-automation
+      run: npm ci
+
+    - name: Install PostgreSQL Client
+      run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+    - name: Apply Database Schema
+      run: |
+        PGPASSWORD=karawang3 psql -h localhost -U postgres -d rtrw_test -f backend/rtrw_schema.sql
+
+    - name: Run Tests with Coverage
+      working-directory: ./qa-automation
+      env:
+        NODE_ENV: test
+        DB_USER: postgres
+        DB_PASSWORD: karawang3
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: rtrw_test
+      run: npx jest --coverage --runInBand
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        directory: ./qa-automation/coverage/
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true
