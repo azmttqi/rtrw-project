@@ -62,9 +62,14 @@ jobs:
         DB_NAME: rtrw_test
       run: npx jest --coverage --runInBand
 
+    - name: Debug Coverage Folder
+      run: ls -R qa-automation/coverage
+
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         directory: ./qa-automation/coverage/
         token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
         fail_ci_if_error: true
+
