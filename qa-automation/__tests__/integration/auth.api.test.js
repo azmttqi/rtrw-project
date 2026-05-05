@@ -23,7 +23,7 @@ jest.mock('bcryptjs', () => ({
 const app = require('../../../backend/src/app');
 
 const VALID_USER = {
-  id: 'user-1', nama: 'Budi', no_wa: '08111', email: 'budi@test.com',
+  id: 'user-1', nama: 'Budi', no_wa: '081234567890', email: 'budi@test.com',
   password_hash: '$2a$10$Yj6f.8yq0oQ1U7zO3HBFBOeGKIoBHiP3s8VmL0WVLaS6lnEniukdm', // bcrypt("password")
   role: 'RT', rt_id: 'rt-1', rw_id: 'rw-1', is_verified: true, google_id: null,
 };
@@ -39,7 +39,7 @@ describe('Auth API Integration Tests', () => {
       userRepository.create.mockResolvedValue(VALID_USER);
 
       const res = await request(app).post('/api/auth/register').send({
-        nama: 'Budi', no_wa: '08111', password: 'password', role: 'RT',
+        nama: 'Budi', no_wa: '081234567890', password: 'password', role: 'RT',
       });
 
       expect(res.status).toBe(201);
@@ -56,7 +56,7 @@ describe('Auth API Integration Tests', () => {
       userRepository.findByNoWa.mockResolvedValue(VALID_USER);
 
       const res = await request(app).post('/api/auth/register').send({
-        nama: 'Budi', no_wa: '08111', password: 'password',
+        nama: 'Budi', no_wa: '081234567890', password: 'password',
       });
       expect(res.status).toBe(400);
       expect(res.body.message).toMatch(/already registered/);
@@ -68,7 +68,7 @@ describe('Auth API Integration Tests', () => {
       invitationRepository.findByToken.mockResolvedValue(null); // null = not found
 
       const res = await request(app).post('/api/auth/register').send({
-        nama: 'Budi', no_wa: '08111', password: 'password',
+        nama: 'Budi', no_wa: '081234567890', password: 'password',
         token_invitation: 'invalid-token',
       });
       expect(res.status).toBe(400);
@@ -81,14 +81,14 @@ describe('Auth API Integration Tests', () => {
       userRepository.findByIdentifier.mockResolvedValue(VALID_USER);
 
       const res = await request(app).post('/api/auth/login').send({
-        no_wa: '08111', password: 'password',
+        no_wa: '081234567890', password: 'password',
       });
       expect(res.status).toBe(200);
       expect(res.body.data).toHaveProperty('token');
     });
 
     it('Negative: field wajib tidak diisi', async () => {
-      const res = await request(app).post('/api/auth/login').send({ no_wa: '08111' });
+      const res = await request(app).post('/api/auth/login').send({ no_wa: '081234567890' });
       expect(res.status).toBe(400);
     });
 
@@ -106,7 +106,7 @@ describe('Auth API Integration Tests', () => {
       userRepository.findByIdentifier.mockResolvedValue(VALID_USER);
 
       const res = await request(app).post('/api/auth/login').send({
-        no_wa: '08111', password: 'wrongpassword',
+        no_wa: '081234567890', password: 'wrongpassword',
       });
       expect(res.status).toBe(400);
     });
@@ -142,20 +142,20 @@ describe('Auth API Integration Tests', () => {
       userRepository.update.mockResolvedValue({ ...VALID_USER, is_verified: true });
 
       const res = await request(app).post('/api/auth/verify-email').send({
-        identifier: '08111', otp: '123456',
+        identifier: '081234567890', otp: '123456',
       });
       expect(res.status).toBe(200);
     });
 
     it('Negative: OTP salah', async () => {
       const res = await request(app).post('/api/auth/verify-email').send({
-        identifier: '08111', otp: '000000',
+        identifier: '081234567890', otp: '000000',
       });
       expect(res.status).toBe(400);
     });
 
     it('Negative: field tidak diisi', async () => {
-      const res = await request(app).post('/api/auth/verify-email').send({ identifier: '08111' });
+      const res = await request(app).post('/api/auth/verify-email').send({ identifier: '081234567890' });
       expect(res.status).toBe(400);
     });
   });

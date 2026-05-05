@@ -2,20 +2,19 @@ const pool = require('../backend/src/config/database');
 
 // Clean database before each test
 beforeEach(async () => {
-  // Only truncate if we are NOT mocking the repository
-  // We check if it's a repository test. If it's a service/api test, we don't need to truncate.
-  // Actually, truncating is fast enough. We'll truncate all main tables.
   try {
     await pool.query(`
       TRUNCATE TABLE 
         users, families, residents, rws, rts, 
         dues_settings, dues_bills, dues_payments, 
         announcements, facilities, facility_reservations, 
-        letters, notifications, invitations
+        letters, notifications, invitations, complaints, cctvs, documents
       RESTART IDENTITY CASCADE;
     `);
+    // Small delay to ensure DB is ready
+    await new Promise(resolve => setTimeout(resolve, 50));
   } catch (error) {
-    // If table doesn't exist or pool is mocked, just ignore
+    // Ignore errors during setup
   }
 });
 
@@ -25,3 +24,4 @@ afterAll(async () => {
     await pool.end();
   }
 });
+

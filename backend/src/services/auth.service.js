@@ -11,9 +11,15 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const authService = {
   async register({ nama, no_wa, email = null, password, role = 'RT', token_invitation, nomor_rw, alamat, nama_wilayah }) {
-    // Check if user already exists by NoWa or Email
     const existingUser = await userRepository.findByNoWa(no_wa);
     if (existingUser) throw new Error('Nomor WhatsApp already registered');
+
+    // Boundary & Format Validations
+    if (password && password.length < 6) throw new Error('Password minimal 6 karakter');
+    if (!/^\d{10,15}$/.test(no_wa)) throw new Error('Nomor WhatsApp tidak valid');
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Format email tidak valid');
+    if (!['RW', 'RT', 'WARGA', 'ADMIN'].includes(role)) throw new Error('Role tidak valid');
+
 
     if (email) {
       const existingEmail = await userRepository.findByEmail(email);

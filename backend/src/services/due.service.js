@@ -15,11 +15,16 @@ const dueService = {
   },
 
   async createSetting({ tingkat, rt_id, rw_id, nominal, tenggat_tanggal }) {
-    if (!tingkat || !nominal || !tenggat_tanggal) {
+    if (!tingkat || nominal === undefined || nominal === null || !tenggat_tanggal) {
       throw new Error('Data pengaturan iuran tidak lengkap');
     }
+
     if (tingkat === 'WARGA' && !rt_id) throw new Error('RT ID diperlukan untuk tingkat Warga');
     if (tingkat === 'RT' && !rw_id) throw new Error('RW ID diperlukan untuk tingkat RT');
+
+    if (nominal <= 0) throw new Error('Nominal harus lebih besar dari 0');
+    if (tenggat_tanggal < 1 || tenggat_tanggal > 28) throw new Error('Tenggat tanggal harus antara 1-28');
+
 
     return await duesRepository.createSetting({ tingkat, rt_id, rw_id, nominal, tenggat_tanggal });
   },

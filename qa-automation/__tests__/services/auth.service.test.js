@@ -38,7 +38,8 @@ describe('Auth Service', () => {
   });
 
   describe('register', () => {
-    const payload = { nama: 'Budi', no_wa: '0811', password: 'pass', role: 'WARGA', token_invitation: 'token' };
+    const payload = { nama: 'Budi', no_wa: '081234567890', password: 'password123', role: 'WARGA', token_invitation: 'token' };
+
 
     it('Success: register WARGA dengan token valid', async () => {
       userRepository.findByNoWa.mockResolvedValue(null);
@@ -60,6 +61,50 @@ describe('Auth Service', () => {
       userRepository.findByNoWa.mockResolvedValue(null);
       invitationRepository.findByToken.mockResolvedValue(null);
       await expect(authService.register(payload)).rejects.toThrow('Invalid or expired');
+    });
+
+    it('Boundary: password terlalu pendek (min 6)', async () => {
+      userRepository.findByNoWa.mockResolvedValue(null);
+      const shortPassPayload = { ...payload, password: '123' };
+      try {
+        await authService.register(shortPassPayload);
+        fail('Should have thrown an error');
+      } catch (e) {
+        expect(e.message).toBe('Password minimal 6 karakter');
+      }
+    });
+
+    it('Boundary: nomor WA terlalu pendek', async () => {
+      userRepository.findByNoWa.mockResolvedValue(null);
+      const shortWaPayload = { ...payload, no_wa: '0812', password: 'password123' };
+      try {
+        await authService.register(shortWaPayload);
+        fail('Should have thrown an error');
+      } catch (e) {
+        expect(e.message).toBe('Nomor WhatsApp tidak valid');
+      }
+    });
+
+    it('Negative: email format tidak valid', async () => {
+      userRepository.findByNoWa.mockResolvedValue(null);
+      const badEmailPayload = { ...payload, no_wa: '08123456789', email: 'bukan-email', password: 'password123' };
+      try {
+        await authService.register(badEmailPayload);
+        fail('Should have thrown an error');
+      } catch (e) {
+        expect(e.message).toBe('Format email tidak valid');
+      }
+    });
+
+    it('Negative: role tidak dikenal', async () => {
+      userRepository.findByNoWa.mockResolvedValue(null);
+      const badRolePayload = { ...payload, no_wa: '08123456789', role: 'HACKER', password: 'password123' };
+      try {
+        await authService.register(badRolePayload);
+        fail('Should have thrown an error');
+      } catch (e) {
+        expect(e.message).toBe('Role tidak valid');
+      }
     });
   });
 });

@@ -20,14 +20,17 @@ const authController = {
         token: result.token,
       });
     } catch (error) {
-      if (error.message.includes('already registered') || 
-          error.message.includes('Invalid invitation') ||
-          error.message.includes('already used') ||
-          error.message.includes('expired')) {
+      const userErrors = [
+        'already registered', 'Invalid or expired', 'already used', 'expired',
+        'minimal 6 karakter', 'tidak valid', 'wajib diisi', 'tidak sesuai'
+      ];
+
+      if (userErrors.some(msg => error.message.includes(msg))) {
         return validationErrorResponse(res, error.message);
       }
       next(error);
     }
+
   },
 
   async registerGoogle(req, res, next) {

@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "QA Automation Tests for RTRW Project",
   "scripts": {
-    "test": "jest"
+    "test": "cross-env NODE_ENV=test jest --runInBand"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "jest": "^30.3.0",
     "supertest": "^7.2.2"
   }
