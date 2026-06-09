@@ -1,22 +1,32 @@
 const request = require('supertest');
 const app = require('../../../backend/src/app');
 const pool = require('../../../backend/src/config/database');
+const { seedBaseData } = require('./utils/e2e-seeder');
 
 describe('E2E: Auth Flow', () => {
-  // Data testing yang valid sesuai dengan validasi BVA yang ketat
-  const testUser = {
-    nama: 'Budi E2E',
-    no_wa: '081234567891', // min 10 digit
-    email: 'budi.e2e@test.com',
-    password: 'password123', // min 6 karakter
-    role: 'RT'
-  };
+  let testData;
+
+  beforeEach(async () => {
+    testData = await seedBaseData();
+  });
 
   it('Complete E2E Auth Flow: Register -> Duplicate Check -> Login', async () => {
+    const testUser = {
+      nama: 'Budi E2E',
+      no_wa: '081234567891', // min 10 digit
+      email: 'budi.e2e@test.com',
+      password: 'password123', // min 6 karakter
+      role: 'RT'
+    };
+
     // 1. Skenario Happy Path: Register User Baru -> Berhasil (201)
     const resRegister = await request(app)
       .post('/api/auth/register')
       .send(testUser);
+
+    if(resRegister.status === 500) {
+      console.log('500 ERROR:', resRegister.body);
+    }
 
     expect(resRegister.status).toBe(201);
     expect(resRegister.body.success).toBe(true);

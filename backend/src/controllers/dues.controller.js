@@ -49,7 +49,7 @@ const duesController = {
       const bill = await dueService.createBill({ family_id, bulan, tahun, nominal });
       return createdResponse(res, 'Tagihan berhasil dibuat', bill);
     } catch (error) {
-      if (error.message.includes('не lengkap') || error.message.includes('sudah ada')) {
+      if (error.message.includes('tidak lengkap') || error.message.includes('sudah ada')) {
         return validationErrorResponse(res, error.message);
       }
       next(error);

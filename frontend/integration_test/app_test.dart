@@ -23,12 +23,12 @@ void main() {
 
       // 3. Masukkan Nomor WhatsApp
       final waField = find.byType(EditableText).first;
-      await tester.enterText(waField, '081234567890');
+      await tester.enterText(waField, '087777777777');
       await tester.pumpAndSettle();
 
       // 4. Masukkan Kata Sandi
       final passField = find.byType(EditableText).last;
-      await tester.enterText(passField, 'password123');
+      await tester.enterText(passField, 'rahasia123');
       await tester.pumpAndSettle();
 
       // 5. Klik Tombol Masuk

@@ -6,7 +6,8 @@ import 'package:frontend/features/auth/logic/auth_provider.dart';
 
 void main() {
   testWidgets('Automated Login Test: Validasi Input Kosong', (WidgetTester tester) async {
-    // 0. Jurus Terakhir: Abaikan semua error visual/gambar agar test tetap hijau
+    // 0. Simpan handler asli dan abaikan semua error visual/gambar eksternal
+    final originalOnError = FlutterError.onError;
     FlutterError.onError = (details) {}; 
 
     // 1. Atur layar sangat lebar (5000px) agar tidak ada overflow sama sekali
@@ -36,6 +37,8 @@ void main() {
     expect(find.text('Email atau No Handphone wajib diisi'), findsOneWidget);
     expect(find.text('Kata sandi wajib diisi'), findsOneWidget);
     
+    // Pulihkan handler asli
+    FlutterError.onError = originalOnError;
     print('✅ ROBOT BERHASIL! SEMUA VALIDASI LOLOS.');
   });
 }
