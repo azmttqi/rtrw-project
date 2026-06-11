@@ -2,9 +2,11 @@ const pool = require('../config/database');
 
 const dashboardRepository = {
   async getRWStats(rwId) {
-    // 1. Count RTs
+    // 1. Count RTs (Only Verified RT Users)
     const rtCountResult = await pool.query(
-      'SELECT COUNT(*) FROM rts WHERE rw_id = $1',
+      `SELECT COUNT(*) FROM users 
+       WHERE role = 'RT' AND is_verified = true 
+       AND rt_id IN (SELECT id FROM rts WHERE rw_id = $1)`,
       [rwId]
     );
     

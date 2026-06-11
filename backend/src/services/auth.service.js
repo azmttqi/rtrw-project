@@ -10,7 +10,7 @@ const invitationRepository = require('../repositories/invitation.repository');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const authService = {
-  async register({ nama, no_wa, email = null, password, role = 'RT', token_invitation, nomor_rw, alamat, nama_wilayah }) {
+  async register({ nama, no_wa, email = null, password, role = 'RT', token_invitation, nomor_rw, nomor_rt, alamat, nama_wilayah }) {
     const existingUser = await userRepository.findByNoWa(no_wa);
     if (existingUser) throw new Error('Nomor WhatsApp already registered');
 
@@ -53,6 +53,21 @@ const authService = {
       rt_id = invitation.rt_id;
       rw_id = invitation.rw_id;
       finalRole = rt_id ? 'WARGA' : 'RT';
+      
+      if (finalRole === 'RT') {
+        if (!nomor_rt) throw new Error('Nomor RT wajib diisi untuk pendaftaran RT');
+        // Check if RT already exists for this RW
+        const existingRt = await pool.query('SELECT id FROM rts WHERE rw_id = $1 AND nomor_rt = $2', [rw_id, nomor_rt]);
+        if (existingRt.rows.length > 0) {
+          throw new Error('Nomor RT sudah terdaftar di RW ini');
+        }
+        const rtRes = await pool.query(
+          'INSERT INTO rts (rw_id, nomor_rt) VALUES ($1, $2) RETURNING id',
+          [rw_id, nomor_rt]
+        );
+        rt_id = rtRes.rows[0].id;
+      }
+      
       await invitationRepository.markAsUsed(token_invitation);
     }
 
@@ -65,7 +80,7 @@ const authService = {
       role: finalRole, 
       rt_id, 
       rw_id,
-      is_verified: finalRole === 'RW' ? false : (finalRole === 'WARGA' ? false : true) // RW needs email verification
+      is_verified: false // All roles need verification (RW by email, RT by RW, WARGA by RT)
     });
 
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
@@ -162,9 +177,39 @@ const authService = {
     return user;
   },
 
-  async updateProfile(userId, { nama }) {
-    const user = await userRepository.update(userId, { nama });
+  async updateProfile(userId, { nama, no_wa, email }) {
+    const updateData = {};
+    if (nama) updateData.nama = nama;
+    if (no_wa) {
+      if (!/^\d{10,15}$/.test(no_wa)) throw new Error('Nomor WhatsApp tidak valid');
+      const existing = await userRepository.findByNoWa(no_wa);
+      if (existing && existing.id !== userId) throw new Error('Nomor WhatsApp already registered');
+      updateData.no_wa = no_wa;
+    }
+    if (email) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Format email tidak valid');
+      const existing = await userRepository.findByEmail(email);
+      if (existing && existing.id !== userId) throw new Error('Email already registered');
+      updateData.email = email;
+    }
+    const user = await userRepository.update(userId, updateData);
     return user;
+  },
+
+  async changePassword(userId, { oldPassword, newPassword }) {
+    const user = await userRepository.findByIdWithPassword(userId);
+    if (!user || !user.password_hash) throw new Error('Password not set or user not found');
+
+    const isValidPassword = await bcrypt.compare(oldPassword, user.password_hash);
+    if (!isValidPassword) {
+      throw new Error('Kata sandi lama salah');
+    }
+
+    if (newPassword.length < 6) throw new Error('Password minimal 6 karakter');
+
+    const password_hash = await bcrypt.hash(newPassword, 10);
+    const updatedUser = await userRepository.update(userId, { password_hash });
+    return updatedUser;
   },
 
   async verifyEmail({ identifier, otp }) {

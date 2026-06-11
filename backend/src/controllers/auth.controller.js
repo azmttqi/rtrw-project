@@ -4,7 +4,7 @@ const { successResponse, createdResponse, errorResponse, validationErrorResponse
 const authController = {
   async register(req, res, next) {
     try {
-      const { nama, no_wa, email, password, role, token_invitation, nomor_rw, alamat, nama_wilayah } = req.body;
+      const { nama, no_wa, email, password, role, token_invitation, nomor_rw, nomor_rt, alamat, nama_wilayah } = req.body;
 
       if (!nama || !no_wa || !password) {
         return validationErrorResponse(res, 'Nama, nomor WhatsApp, dan password wajib diisi');
@@ -12,7 +12,7 @@ const authController = {
 
       const result = await authService.register({ 
         nama, no_wa, email, password, role, token_invitation, 
-        nomor_rw, alamat, nama_wilayah 
+        nomor_rw, nomor_rt, alamat, nama_wilayah 
       });
 
       return createdResponse(res, 'Registrasi berhasil', {
@@ -88,10 +88,26 @@ const authController = {
 
   async updateProfile(req, res, next) {
     try {
-      const { nama } = req.body;
-      const user = await authService.updateProfile(req.user.id, { nama });
+      const { nama, no_wa, email } = req.body;
+      const user = await authService.updateProfile(req.user.id, { nama, no_wa, email });
       return successResponse(res, 'Profile updated', user);
     } catch (error) {
+      next(error);
+    }
+  },
+
+  async changePassword(req, res, next) {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      if (!oldPassword || !newPassword) {
+        return validationErrorResponse(res, 'Kata sandi lama dan baru wajib diisi');
+      }
+      const user = await authService.changePassword(req.user.id, { oldPassword, newPassword });
+      return successResponse(res, 'Kata sandi berhasil diubah', user);
+    } catch (error) {
+      if (error.message.includes('salah') || error.message.includes('minimal')) {
+        return validationErrorResponse(res, error.message);
+      }
       next(error);
     }
   },

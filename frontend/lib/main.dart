@@ -49,8 +49,8 @@ class MyApp extends StatelessWidget {
         return null;
       },
       routes: {
-        '/': (context) => const SplashScreen(),
-        '/auth-wrapper': (context) => const AuthWrapper(),
+        '/': (context) => const AuthWrapper(),
+        '/splash': (context) => const SplashScreen(),
         '/invite': (context) => const InviteHandlerScreen(token: ''),
         '/announcements': (context) => const AnnouncementListScreen(),
         '/dues-history': (context) => const DueHistoryScreen(),
@@ -59,11 +59,34 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
   @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _showSplash = true;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showSplash = false;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_showSplash) {
+      return const SplashScreen();
+    }
+
     final authProvider = context.watch<AuthProvider>();
 
     if (authProvider.isAuthenticated) {

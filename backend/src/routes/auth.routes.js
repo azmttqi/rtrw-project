@@ -9,6 +9,7 @@ router.post('/login', authController.login);
 router.post('/verify-email', authController.verifyEmail);
 router.get('/me', authenticate, authController.getProfile);
 router.patch('/me', authenticate, authController.updateProfile);
+router.patch('/password', authenticate, authController.changePassword);
 
 module.exports = router;
 

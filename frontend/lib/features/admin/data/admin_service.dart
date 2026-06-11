@@ -29,7 +29,7 @@ class AdminService {
 
   Future<void> verifyRT(int userId, bool status) async {
     try {
-      await apiClient.patch('/users/$userId/verify-rt', data: {'is_verified': status});
+      await apiClient.patch('/users/$userId/verify-rt', data: {'status': status ? 'APPROVED' : 'REJECTED'});
     } catch (e) {
       throw Exception(e.toString());
     }
@@ -48,6 +48,14 @@ class AdminService {
     try {
       final response = await apiClient.post('/invitations', data: {'no_wa': noWa});
       return response.data['data'];
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<void> deleteInvitation(int id) async {
+    try {
+      await apiClient.delete('/invitations/$id');
     } catch (e) {
       throw Exception(e.toString());
     }

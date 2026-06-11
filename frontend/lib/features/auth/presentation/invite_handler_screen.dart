@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../logic/auth_provider.dart';
 import '../../../../core/api_client.dart';
 import '../../warga/presentation/register_warga_screen.dart';
+import 'register_rt_screen.dart';
 
 class InviteHandlerScreen extends StatefulWidget {
   final String token;
@@ -94,20 +95,13 @@ class _InviteHandlerScreenState extends State<InviteHandlerScreen> {
             const SizedBox(height: 48),
             
             if (_role == 'RT')
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final authProvider = context.read<AuthProvider>();
-                  final success = await authProvider.loginGoogle('mock_id_token', tokenInvitation: widget.token);
-                  if (success && mounted) {
-                    // Navigate to Dashboard or Pending Verification Screen
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Registrasi RT berhasil. Menunggu verifikasi RW.')),
-                    );
-                    Navigator.of(context).pop();
-                  }
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => RegisterRTScreen(token: widget.token)
+                  ));
                 },
-                icon: const Icon(Icons.login),
-                label: const Text('Login dengan Google (RT)'),
+                child: const Text('Lanjut Registrasi RT'),
               )
             else
               ElevatedButton(

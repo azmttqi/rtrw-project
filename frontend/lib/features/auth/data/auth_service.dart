@@ -45,6 +45,29 @@ class AuthService {
     }
   }
 
+  Future<Map<String, dynamic>> registerRT({
+    required String nama,
+    required String noWa,
+    required String email,
+    required String password,
+    required String nomorRt,
+    required String tokenInvitation,
+  }) async {
+    try {
+      final response = await apiClient.post('/auth/register', data: {
+        'nama': nama,
+        'no_wa': noWa,
+        'email': email,
+        'password': password,
+        'nomor_rt': nomorRt,
+        'token_invitation': tokenInvitation,
+      });
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Gagal registrasi RT');
+    }
+  }
+
   Future<Map<String, dynamic>> registerRW({
     required String nama,
     required String noWa,
@@ -89,6 +112,31 @@ class AuthService {
       return response.data;
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Gagal mengambil profil');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateProfile({String? nama, String? noWa, String? email}) async {
+    try {
+      final response = await apiClient.patch('/auth/me', data: {
+        if (nama != null) 'nama': nama,
+        if (noWa != null) 'no_wa': noWa,
+        if (email != null) 'email': email,
+      });
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Gagal memperbarui profil');
+    }
+  }
+
+  Future<Map<String, dynamic>> changePassword(String oldPassword, String newPassword) async {
+    try {
+      final response = await apiClient.patch('/auth/password', data: {
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      });
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Gagal mengubah kata sandi');
     }
   }
 }

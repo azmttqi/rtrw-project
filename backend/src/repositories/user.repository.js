@@ -14,6 +14,11 @@ const userRepository = {
     return result.rows[0];
   },
 
+  async findByIdWithPassword(id) {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+    return result.rows[0];
+  },
+
   async findByNoWa(no_wa) {
     const result = await pool.query(
       `SELECT u.*, r.nomor_rt, rw.nomor_rw
@@ -92,31 +97,48 @@ const userRepository = {
     return result.rows[0];
   },
 
-  async findAll({ rt_id, rw_id, page = 1, limit = 10 }) {
+  async findAll({ rt_id, rw_id, role, is_verified, page = 1, limit = 10 }) {
     const offset = (page - 1) * limit;
     let query = 'SELECT id, nama, no_wa, email, google_id, role, rt_id, rw_id, is_verified, created_at FROM users WHERE 1=1';
+    let countQuery = 'SELECT COUNT(*) FROM users WHERE 1=1';
     const params = [];
     let paramIndex = 1;
 
     if (rt_id) {
       query += ` AND rt_id = $${paramIndex}`;
+      countQuery += ` AND rt_id = $${paramIndex}`;
       params.push(rt_id);
       paramIndex++;
     }
 
     if (rw_id) {
       query += ` AND rw_id = $${paramIndex}`;
+      countQuery += ` AND rw_id = $${paramIndex}`;
       params.push(rw_id);
       paramIndex++;
     }
+
+    if (role) {
+      query += ` AND role = $${paramIndex}`;
+      countQuery += ` AND role = $${paramIndex}`;
+      params.push(role);
+      paramIndex++;
+    }
+
+    if (is_verified !== undefined) {
+      query += ` AND is_verified = $${paramIndex}`;
+      countQuery += ` AND is_verified = $${paramIndex}`;
+      params.push(is_verified === 'true' || is_verified === true);
+      paramIndex++;
+    }
+
+    const countResult = await pool.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].count);
 
     query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(limit, offset);
 
     const result = await pool.query(query, params);
-
-    const countResult = await pool.query('SELECT COUNT(*) FROM users');
-    const total = parseInt(countResult.rows[0].count);
 
     return {
       data: result.rows,

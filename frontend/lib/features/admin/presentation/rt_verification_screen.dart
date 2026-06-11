@@ -28,7 +28,7 @@ class _RtVerificationScreenState extends State<RtVerificationScreen> {
     try {
       final result = await adminService.getPendingRT();
       setState(() {
-        _pendingList = result['data']['data'] ?? []; // Adjust based on API structure
+        _pendingList = result['data']['users'] ?? []; // Adjust based on API structure
         _isLoading = false;
       });
     } catch (e) {

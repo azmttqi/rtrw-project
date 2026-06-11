@@ -3,6 +3,14 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../auth/logic/auth_provider.dart';
 import '../data/finance_service.dart';
+import 'ubah_profil_screen.dart';
+import 'pengaturan_keamanan_screen.dart';
+import 'detail_wilayah_rw_screen.dart';
+import 'pusat_bantuan_screen.dart';
+import 'syarat_ketentuan_screen.dart';
+import 'invitation_management_screen.dart';
+import 'rt_verification_screen.dart';
+
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -240,11 +248,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icons.person_outline_rounded,
                         'Ubah Profil',
                         'Update foto dan data diri',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const UbahProfilScreen(),
+                            ),
+                          );
+                        },
                       ),
                       _buildMenuItem(
                         Icons.shield_outlined,
                         'Pengaturan Keamanan',
                         'Kata sandi dan verifikasi',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PengaturanKeamananScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ]),
                     const SizedBox(height: 24),
@@ -271,6 +295,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               : (authProvider.isRT
                                     ? 'Manajemen data warga RT'
                                     : 'Ajukan surat pengantar digital'),
+                          onTap: authProvider.isRW
+                              ? () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const DetailWilayahRwScreen(),
+                                    ),
+                                  );
+                                }
+                              : null,
                         ),
                         _buildMenuItem(
                           authProvider.isRW
@@ -282,7 +316,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           authProvider.isRW
                               ? 'Manajemen pengurus RT'
                               : 'Konfigurasi tagihan bulanan',
+                          onTap: authProvider.isRW
+                              ? () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const InvitationManagementScreen(),
+                                    ),
+                                  );
+                                }
+                              : null,
                         ),
+                        if (authProvider.isRW)
+                          _buildMenuItem(
+                            Icons.verified_user_outlined,
+                            'Verifikasi Ketua RT',
+                            'Persetujuan akun RT baru',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const RtVerificationScreen(),
+                                ),
+                              );
+                            },
+                          ),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -291,11 +349,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icons.help_outline_rounded,
                         'Pusat Bantuan',
                         'Panduan penggunaan aplikasi',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PusatBantuanScreen(),
+                            ),
+                          );
+                        },
                       ),
                       _buildMenuItem(
                         Icons.description_outlined,
                         'Syarat & Ketentuan',
                         'Legalitas dan kebijakan',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SyaratKetentuanScreen(),
+                            ),
+                          );
+                        },
                       ),
                       _buildMenuItem(
                         Icons.logout_rounded,

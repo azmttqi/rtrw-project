@@ -5,8 +5,8 @@ const { getPaginationMeta } = require('../utils/pagination');
 const usersController = {
   async getUsers(req, res, next) {
     try {
-      const { rt_id, rw_id, page = 1, limit = 10 } = req.query;
-      const result = await userRepository.findAll({ rt_id, rw_id, page: parseInt(page), limit: parseInt(limit) });
+      const { rt_id, rw_id, role, is_verified, page = 1, limit = 10 } = req.query;
+      const result = await userRepository.findAll({ rt_id, rw_id, role, is_verified, page: parseInt(page), limit: parseInt(limit) });
       
       return successResponse(res, 'Users retrieved', {
         users: result.data,

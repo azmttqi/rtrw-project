@@ -61,6 +61,24 @@ class AuthProvider with ChangeNotifier {
         ));
   }
 
+  Future<bool> registerRT({
+    required String nama,
+    required String noWa,
+    required String email,
+    required String password,
+    required String nomorRt,
+    required String tokenInvitation,
+  }) async {
+    return _handleAuth(() => _authService.registerRT(
+          nama: nama,
+          noWa: noWa,
+          email: email,
+          password: password,
+          nomorRt: nomorRt,
+          tokenInvitation: tokenInvitation,
+        ));
+  }
+
   Future<bool> registerRW({
     required String nama,
     required String noWa,
@@ -147,6 +165,45 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error refreshing profile: $e');
+    }
+  }
+
+  Future<bool> updateProfile({String? nama, String? noWa, String? email}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final result = await _authService.updateProfile(nama: nama, noWa: noWa, email: email);
+      _user = result['data'];
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user', json.encode(_user));
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> changePassword(String oldPassword, String newPassword) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _authService.changePassword(oldPassword, newPassword);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 }
