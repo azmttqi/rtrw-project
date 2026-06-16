@@ -37,8 +37,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.updateProfile(
-      _namaController.text,
-      _noWaController.text,
+      nama: _namaController.text,
+      noWa: _noWaController.text,
     );
 
     if (success && mounted) {
