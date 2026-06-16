@@ -168,13 +168,21 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+<<<<<<< Updated upstream
   Future<bool> updateProfile({String? nama, String? noWa, String? email}) async {
+=======
+  Future<bool> updateProfile(String nama, String noWa) async {
+>>>>>>> Stashed changes
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
+<<<<<<< Updated upstream
       final result = await _authService.updateProfile(nama: nama, noWa: noWa, email: email);
+=======
+      final result = await _authService.updateProfile(nama, noWa);
+>>>>>>> Stashed changes
       _user = result['data'];
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user', json.encode(_user));
@@ -188,6 +196,7 @@ class AuthProvider with ChangeNotifier {
       return false;
     }
   }
+<<<<<<< Updated upstream
 
   Future<bool> changePassword(String oldPassword, String newPassword) async {
     _isLoading = true;
@@ -206,4 +215,6 @@ class AuthProvider with ChangeNotifier {
       return false;
     }
   }
+=======
+>>>>>>> Stashed changes
 }

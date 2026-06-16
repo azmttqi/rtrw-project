@@ -15,6 +15,7 @@ router.post('/settings', authenticate, duesController.createSetting);
 router.post('/bills', authenticate, isRT(), duesController.createBill);
 router.post('/bills/:id/remind', authenticate, isRT(), duesController.sendManualReminder);
 router.get('/bills', authenticate, isRT(), duesController.getBillsByRT);
+router.get('/history', authenticate, duesController.getDueHistory);
 
 // --- Payments ---
 router.post('/pay', authenticate, duesController.createPayment);

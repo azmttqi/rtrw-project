@@ -209,8 +209,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 CustomButton(
                   text: 'Login dengan Google',
                   variant: ButtonVariant.google,
-                  customIcon: Image.network(
-                    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
+                  customIcon: Image.asset(
+                    'assets/images/google_logo.png',
                     height: 20,
                   ),
                   onPressed: () async {
@@ -220,29 +220,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 40),
-                // Footer Links
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('KETENTUAN LAYANAN', style: TextStyle(fontSize: 10, color: Colors.grey, letterSpacing: 1)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('KEBIJAKAN PRIVASI', style: TextStyle(fontSize: 10, color: Colors.grey, letterSpacing: 1)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('BANTUAN', style: TextStyle(fontSize: 10, color: Colors.grey, letterSpacing: 1)),
-                  ],
-                ),
-                
-                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -262,6 +239,30 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+                  ],
+                ),
+
+                const SizedBox(height: 48),
+                
+                // Footer Links
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('KETENTUAN LAYANAN', style: TextStyle(fontSize: 10, color: Colors.grey, letterSpacing: 1)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('KEBIJAKAN PRIVASI', style: TextStyle(fontSize: 10, color: Colors.grey, letterSpacing: 1)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('BANTUAN', style: TextStyle(fontSize: 10, color: Colors.grey, letterSpacing: 1)),
                   ],
                 ),
                 const SizedBox(height: 40),

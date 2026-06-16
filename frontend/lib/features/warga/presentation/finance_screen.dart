@@ -208,6 +208,7 @@ class _WargaFinanceScreenState extends State<WargaFinanceScreen> {
                       child: Text(
                         'TERBAYAR LUNAS',
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),

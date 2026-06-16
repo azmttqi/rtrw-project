@@ -4,6 +4,8 @@ import 'features/auth/logic/auth_provider.dart';
 import 'features/announcements/logic/announcement_provider.dart';
 import 'features/dues/logic/due_provider.dart';
 import 'features/admin/logic/dashboard_provider.dart';
+import 'features/warga/logic/letter_provider.dart';
+import 'features/warga/logic/family_provider.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/admin/presentation/dashboard_screen.dart' as admin;
 import 'features/warga/presentation/dashboard_screen.dart' as warga;
@@ -21,6 +23,8 @@ void main() {
         ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
         ChangeNotifierProvider(create: (_) => DueProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
+        ChangeNotifierProvider(create: (_) => LetterProvider()),
+        ChangeNotifierProvider(create: (_) => FamilyProvider()),
       ],
       child: const MyApp(),
     ),

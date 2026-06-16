@@ -115,6 +115,7 @@ class AuthService {
     }
   }
 
+<<<<<<< Updated upstream
   Future<Map<String, dynamic>> updateProfile({String? nama, String? noWa, String? email}) async {
     try {
       final response = await apiClient.patch('/auth/me', data: {
@@ -137,6 +138,17 @@ class AuthService {
       return response.data;
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Gagal mengubah kata sandi');
+=======
+  Future<Map<String, dynamic>> updateProfile(String nama, String noWa) async {
+    try {
+      final response = await apiClient.put('/users/profile', data: {
+        'nama': nama,
+        'no_wa': noWa,
+      });
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Gagal mengubah profil');
+>>>>>>> Stashed changes
     }
   }
 }

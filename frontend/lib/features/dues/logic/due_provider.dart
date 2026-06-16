@@ -42,4 +42,20 @@ class DueProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> createPayment(String bulan, int tahun, double nominal, String metodeBayar, String buktiBayarUrl) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _service.createPayment(bulan, tahun, nominal, metodeBayar, buktiBayarUrl);
+      await fetchDuesHistory(); // Refresh list
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 }

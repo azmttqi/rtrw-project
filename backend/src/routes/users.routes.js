@@ -4,6 +4,9 @@ const usersController = require('../controllers/users.controller');
 const { authenticate } = require('../middleware/auth.middleware');
 const { isRT, isRW } = require('../middleware/role.middleware');
 
+// Update profile
+router.put('/profile', authenticate, usersController.updateProfile);
+
 router.get('/', authenticate, isRT(), usersController.getUsers);
 router.get('/:id', authenticate, isRT(), usersController.getUserById);
 

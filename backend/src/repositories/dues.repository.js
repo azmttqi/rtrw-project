@@ -77,6 +77,19 @@ const duesRepository = {
     return result.rows[0];
   },
 
+  async findHistoryByFamilyId(familyId) {
+    const result = await pool.query(
+      `SELECT db.id, db.bulan, db.tahun, db.nominal as jumlah, db.status as bill_status, 
+              dp.status as payment_status, dp.dibayar_pada as tanggal_bayar
+       FROM dues_bills db
+       LEFT JOIN dues_payments dp ON db.family_id = dp.pembayar_family_id AND db.bulan = dp.bulan AND db.tahun = dp.tahun
+       WHERE db.family_id = $1
+       ORDER BY db.tahun DESC, db.bulan DESC`,
+      [familyId]
+    );
+    return result.rows;
+  },
+
   // Payments
   async createPayment({ pembayar_family_id, pembayar_rt_id, bulan, tahun, nominal, metode_bayar, bukti_bayar_url }) {
     const result = await pool.query(
