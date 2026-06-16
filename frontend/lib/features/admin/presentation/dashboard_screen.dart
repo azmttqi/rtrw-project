@@ -10,6 +10,7 @@ import './finance_screen.dart';
 import './profile_screen.dart';
 import '../../announcements/presentation/create_announcement_screen.dart';
 import '../../announcements/presentation/widgets/announcement_detail_modal.dart';
+import './data_kependudukan_screen.dart';
 import '../logic/dashboard_provider.dart';
 import 'package:intl/intl.dart';
 
@@ -333,7 +334,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Friday, 27 March 2026',
+                DateFormat('EEEE, d MMMM yyyy').format(DateTime.now()),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -433,7 +434,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                _buildAgeDistribution(),
+                if (stats != null && stats['ageDistribution'] != null)
+                  _buildAgeDistribution(stats['ageDistribution'])
+                else
+                  _buildAgeDistribution({
+                    'under_18': 0,
+                    'adult': 0,
+                    'senior': 0
+                  }),
                 const SizedBox(height: 32),
 
                 // Resident Data Quick Access Card
@@ -494,7 +502,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const DataKependudukanScreen(),
+                              ),
+                            );
+                          },
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             backgroundColor: AppColors.primaryGreen.withOpacity(0.08),
@@ -558,21 +573,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                if (stats != null && stats['pendingApprovalsList'] != null && (stats['pendingApprovalsList'] as List).isNotEmpty)
+                  ...(stats['pendingApprovalsList'] as List).map((item) {
+                    final type = item['type'];
+                    if (type == 'RT_VERIFICATION') {
+                      return _buildApprovalItem(
+                        item['nama'] ?? 'Tanpa Nama', 
+                        'Verifikasi Akun • RT ${item['nomor_rt']}'
+                      );
+                    } else if (type == 'FAMILY_VERIFICATION') {
+                      return _buildApprovalItem(
+                        item['name'] ?? 'Tanpa Nama', 
+                        'Verifikasi Keluarga • KK: ${item['no_kk']}'
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }).toList()
+                else
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text('Tidak ada persetujuan tertunda saat ini.', style: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
+                const SizedBox(height: 32),
               ],
             );
           },
         ),
         const SizedBox(height: 16),
-        _buildApprovalItem('Aditya Wijaya', 'New Resident • Block C-12'),
-        _buildApprovalItem(
-          'Siti Aminah',
-          'Address Change • Block A-05 to B-02',
-        ),
-        _buildApprovalItem(
-          'Budi Santoso',
-          'Venue Booking • Community Center • Oct 28',
-        ),
-        const SizedBox(height: 32),
 
         // Gate Monitoring
         Row(
@@ -833,7 +863,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildAgeDistribution() {
+  Widget _buildAgeDistribution(Map<String, dynamic> ageData) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -853,9 +883,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildAgeRow('0-17', '22%'),
-          _buildAgeRow('18-60', '64%'),
-          _buildAgeRow('60+', '14%'),
+          _buildAgeRow('0-17', '${ageData['under_18'] ?? 0}%'),
+          _buildAgeRow('18-60', '${ageData['adult'] ?? 0}%'),
+          _buildAgeRow('60+', '${ageData['senior'] ?? 0}%'),
           const SizedBox(height: 12),
           Text(
             'Productive age residents are dominant this quarter.',

@@ -6,10 +6,12 @@ import '../data/finance_service.dart';
 import 'ubah_profil_screen.dart';
 import 'pengaturan_keamanan_screen.dart';
 import 'detail_wilayah_rw_screen.dart';
+import 'data_kependudukan_screen.dart';
 import 'pusat_bantuan_screen.dart';
 import 'syarat_ketentuan_screen.dart';
 import 'invitation_management_screen.dart';
 import 'rt_verification_screen.dart';
+import 'atur_tagihan_screen.dart';
 
 
 class ProfileScreen extends StatefulWidget {
@@ -304,7 +306,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   );
                                 }
-                              : null,
+                              : (authProvider.isRT ? () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const DataKependudukanScreen(),
+                                    ),
+                                  );
+                                } : null),
                         ),
                         _buildMenuItem(
                           authProvider.isRW
@@ -325,7 +334,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   );
                                 }
-                              : null,
+                              : () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const AturTagihanScreen(),
+                                    ),
+                                  );
+                                },
                         ),
                         if (authProvider.isRW)
                           _buildMenuItem(

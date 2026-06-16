@@ -33,4 +33,22 @@ class FinanceService {
     }
     throw Exception('Gagal memuat statistik dashboard');
   }
+
+  Future<int> scanReceipt(String imagePath, String token) async {
+    final uri = Uri.parse('$_base/dashboard/scan-receipt');
+    final request = http.MultipartRequest('POST', uri);
+    request.headers.addAll(_headers(token));
+    request.files.add(await http.MultipartFile.fromPath('receipt', imagePath));
+
+    final streamedResponse = await request.send();
+    final res = await http.Response.fromStream(streamedResponse);
+
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      if (body['success']) {
+        return body['data']['amount'] ?? 0;
+      }
+    }
+    throw Exception('Gagal memindai struk. Coba lagi.');
+  }
 }

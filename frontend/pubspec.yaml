@@ -43,6 +43,8 @@ dependencies:
   google_sign_in: ^7.2.0
   path_provider: ^2.1.5
   universal_html: ^2.3.0
+  image_picker: ^1.2.2
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:

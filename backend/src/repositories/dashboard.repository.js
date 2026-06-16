@@ -74,6 +74,28 @@ const dashboardRepository = {
       [rwId]
     );
 
+    // 7. Age Distribution
+    const ageDistributionResult = await pool.query(
+      `SELECT 
+        COUNT(*) FILTER (WHERE EXTRACT(YEAR FROM age(CURRENT_DATE, r.tanggal_lahir)) < 18) as under_18,
+        COUNT(*) FILTER (WHERE EXTRACT(YEAR FROM age(CURRENT_DATE, r.tanggal_lahir)) >= 18 AND EXTRACT(YEAR FROM age(CURRENT_DATE, r.tanggal_lahir)) <= 60) as adult,
+        COUNT(*) FILTER (WHERE EXTRACT(YEAR FROM age(CURRENT_DATE, r.tanggal_lahir)) > 60) as senior,
+        COUNT(r.id) as total
+       FROM residents r
+       JOIN families f ON r.family_id = f.id
+       JOIN rts rt ON f.rt_id = rt.id
+       WHERE rt.rw_id = $1 AND r.tanggal_lahir IS NOT NULL`,
+      [rwId]
+    );
+
+    const ageData = ageDistributionResult.rows[0];
+    const totalAge = parseInt(ageData.total) || 1; // avoid division by zero
+    const ageDistribution = {
+      under_18: Math.round((parseInt(ageData.under_18) / totalAge) * 100) || 0,
+      adult: Math.round((parseInt(ageData.adult) / totalAge) * 100) || 0,
+      senior: Math.round((parseInt(ageData.senior) / totalAge) * 100) || 0
+    };
+
     return {
       totalRT: parseInt(rtCountResult.rows[0].count),
       totalWarga: parseInt(wargaCountResult.rows[0].count),
@@ -83,7 +105,10 @@ const dashboardRepository = {
         rt: `RT ${row.nomor_rt}`,
         percentage: row.total_families > 0 ? parseInt(row.paid_families) / parseInt(row.total_families) : 0
       })),
-      latestComplaints: complaintsResult.rows
+      latestComplaints: complaintsResult.rows,
+      ageDistribution,
+      totalPendingApprovals: parseInt(rtCountResult.rows[0].count), // RW has no direct totalPendingApprovals var, but we'll add the list
+      pendingApprovalsList: pendingApprovalsListResult.rows
     };
   },
 
@@ -102,7 +127,7 @@ const dashboardRepository = {
 
     // 3. Count Pending Approvals (e.g. resident verifications)
     const pendingApprovalsResult = await pool.query(
-      "SELECT COUNT(*) FROM users WHERE rt_id = $1 AND is_verified = false",
+      "SELECT COUNT(*) FROM families WHERE rt_id = $1 AND status_verifikasi = 'PENDING'",
       [rtId]
     );
 
@@ -127,11 +152,45 @@ const dashboardRepository = {
       [rtId]
     );
 
+    // 5. Age Distribution
+    const ageDistributionResult = await pool.query(
+      `SELECT 
+        COUNT(*) FILTER (WHERE EXTRACT(YEAR FROM age(CURRENT_DATE, r.tanggal_lahir)) < 18) as under_18,
+        COUNT(*) FILTER (WHERE EXTRACT(YEAR FROM age(CURRENT_DATE, r.tanggal_lahir)) >= 18 AND EXTRACT(YEAR FROM age(CURRENT_DATE, r.tanggal_lahir)) <= 60) as adult,
+        COUNT(*) FILTER (WHERE EXTRACT(YEAR FROM age(CURRENT_DATE, r.tanggal_lahir)) > 60) as senior,
+        COUNT(r.id) as total
+       FROM residents r
+       JOIN families f ON r.family_id = f.id
+       WHERE f.rt_id = $1 AND r.tanggal_lahir IS NOT NULL`,
+      [rtId]
+    );
+
+    const ageData = ageDistributionResult.rows[0];
+    const totalAge = parseInt(ageData.total) || 1; // avoid division by zero
+    const ageDistribution = {
+      under_18: Math.round((parseInt(ageData.under_18) / totalAge) * 100) || 0,
+      adult: Math.round((parseInt(ageData.adult) / totalAge) * 100) || 0,
+      senior: Math.round((parseInt(ageData.senior) / totalAge) * 100) || 0
+    };
+
+    // 6. Pending Approvals List (Family Verification)
+    const pendingApprovalsListResult = await pool.query(
+      `SELECT f.id as family_id, u.nama as name, f.no_kk, 'FAMILY_VERIFICATION' as type
+       FROM families f
+       JOIN users u ON f.user_id = u.id
+       WHERE f.rt_id = $1 AND f.status_verifikasi = 'PENDING'
+       ORDER BY f.created_at DESC
+       LIMIT 3`,
+      [rtId]
+    );
+
     return {
       totalWarga: parseInt(wargaCountResult.rows[0].count),
       totalBalance: parseFloat(balanceResult.rows[0].sum || 0),
       totalPendingApprovals: parseInt(pendingApprovalsResult.rows[0].count),
-      latestAnnouncements: announcementsResult.rows
+      latestAnnouncements: announcementsResult.rows,
+      ageDistribution,
+      pendingApprovalsList: pendingApprovalsListResult.rows
     };
   },
 

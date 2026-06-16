@@ -78,6 +78,15 @@ class AdminService {
       throw Exception(e.toString());
     }
   }
+
+  Future<List<dynamic>> getFamilyMembers(int familyId) async {
+    try {
+      final response = await apiClient.get('/residents', queryParameters: {'family_id': familyId});
+      return response.data['data'] ?? [];
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 }
 
 final adminService = AdminService();

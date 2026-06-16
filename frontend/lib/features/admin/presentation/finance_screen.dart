@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../auth/logic/auth_provider.dart';
 import '../data/finance_service.dart';
 import './atur_tagihan_screen.dart';
+import 'package:image_picker/image_picker.dart';
 
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
@@ -58,6 +59,87 @@ class _FinanceScreenState extends State<FinanceScreen> {
               ? val.toDouble()
               : double.tryParse(val.toString()) ?? 0.0);
     return 'Rp ${NumberFormat('#,###', 'id').format(amount)}';
+  }
+
+  Future<void> _scanReceipt() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    
+    if (image == null || !mounted) return;
+
+    final token = context.read<AuthProvider>().token ?? '';
+    
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(color: AppColors.primaryGreen),
+            SizedBox(width: 20),
+            Text("Membaca struk..."),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final amount = await _service.scanReceipt(image.path, token);
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading
+
+      // Show Confirmation Dialog
+      final amountController = TextEditingController(text: amount > 0 ? amount.toString() : '');
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Konfirmasi Pengeluaran'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Sistem mendeteksi nominal berikut. Silakan periksa kembali:'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: amountController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Nominal (Rp)',
+                  border: OutlineInputBorder(),
+                  prefixText: 'Rp ',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // TODO: Call API to save expense
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Berhasil mendata pengeluaran ke sistem.')),
+                );
+                _load(); // Reload dashboard
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
+              child: const Text('Simpan', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString(), style: const TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -287,9 +369,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   true; // For now assuming all additions for RT/RW dues
               final String title;
               if (tx['tipe'] == 'RT') {
-                title = 'Iuran RT ${tx['nomor_rt']}';
+                title = 'Iuran RT ${tx['nomor_rt']} (${tx['bulan']}/${tx['tahun']})';
               } else {
-                title = 'Iuran ${tx['nama_pembayar']}';
+                title = 'Iuran ${tx['nama_pembayar']} (${tx['bulan']}/${tx['tahun']})';
               }
               return _buildTransactionItem(
                 title,
@@ -365,7 +447,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           SizedBox(
             width: double.infinity,
             child: TextButton(
-              onPressed: () {},
+              onPressed: _scanReceipt,
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: AppColors.primaryGreen.withOpacity(0.08),
@@ -424,7 +506,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    '${_summary?['bulan']}/${_summary?['tahun']}',
+                    'Periode Saat Ini',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
@@ -439,7 +521,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'Oktober 2023',
+                  '${_summary?['bulan']}/${_summary?['tahun']}',
                   style: TextStyle(
                     color: Colors.green.shade700,
                     fontSize: 10,
