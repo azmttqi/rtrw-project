@@ -27,6 +27,26 @@ const usersController = {
     }
   },
 
+  async updateProfile(req, res, next) {
+    try {
+      const id = req.user.id;
+      const { nama, no_wa } = req.body;
+
+      const updateData = {};
+      if (nama) updateData.nama = nama;
+      if (no_wa) updateData.no_wa = no_wa;
+
+      if (Object.keys(updateData).length === 0) {
+        return validationErrorResponse(res, 'Tidak ada data untuk diupdate');
+      }
+
+      const updatedUser = await userRepository.update(id, updateData);
+      return successResponse(res, 'Profil berhasil diupdate', updatedUser);
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async verifyRT(req, res, next) {
     try {
       const { id } = req.params;

@@ -71,6 +71,42 @@ const duesController = {
     }
   },
 
+  async getDueHistory(req, res, next) {
+    try {
+      const family = await familyRepository.findByUserId(req.user.id);
+      if (!family) {
+        return notFoundResponse(res, 'Data keluarga tidak ditemukan');
+      }
+
+      const history = await dueService.getDueHistoryByFamily(family.id);
+
+      const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+      const mappedHistory = history.map(item => {
+        let finalStatus = 'BELUM_BAYAR';
+        
+        if (item.bill_status === 'APPROVED') {
+          finalStatus = 'LUNAS';
+        } else if (item.payment_status === 'PENDING') {
+          finalStatus = 'PENDING';
+        }
+
+        return {
+          id: item.id,
+          bulan: months[item.bulan - 1] || item.bulan.toString(),
+          tahun: item.tahun,
+          jumlah: parseFloat(item.jumlah),
+          status: finalStatus,
+          tanggal_bayar: item.tanggal_bayar
+        };
+      });
+
+      return successResponse(res, 'Riwayat Iuran', mappedHistory);
+    } catch (error) {
+      next(error);
+    }
+  },
+
   // --- Payments ---
   async createPayment(req, res, next) {
     try {

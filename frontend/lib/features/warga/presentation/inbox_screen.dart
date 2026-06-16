@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../dues/logic/due_provider.dart';
+import '../../dues/presentation/payment_screen.dart';
+import 'notification_settings_screen.dart';
 import '../../announcements/logic/announcement_provider.dart';
+import '../logic/letter_provider.dart';
 import 'package:intl/intl.dart';
 
 class WargaInboxScreen extends StatefulWidget {
@@ -27,6 +30,7 @@ class _WargaInboxScreenState extends State<WargaInboxScreen> {
     await Future.wait([
       context.read<DueProvider>().fetchDuesHistory(),
       context.read<AnnouncementProvider>().fetchAnnouncements(),
+      context.read<LetterProvider>().fetchLetters(),
     ]);
   }
 
@@ -78,8 +82,8 @@ class _WargaInboxScreenState extends State<WargaInboxScreen> {
               // Notifications List
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Consumer2<DueProvider, AnnouncementProvider>(
-                  builder: (context, dueProvider, announcementProvider, _) {
+                child: Consumer3<DueProvider, AnnouncementProvider, LetterProvider>(
+                  builder: (context, dueProvider, announcementProvider, letterProvider, _) {
                     return Column(
                       children: [
                         if (_selectedFilter == 'Keuangan') ...[
@@ -87,7 +91,7 @@ class _WargaInboxScreenState extends State<WargaInboxScreen> {
                           const SizedBox(height: 16),
                         ],
                         if (_selectedFilter == 'Surat') ...[
-                          _buildLetterCard(),
+                          _buildLetterList(letterProvider, context),
                           const SizedBox(height: 16),
                         ],
                         if (_selectedFilter == 'Pengumuman') ...[
@@ -257,7 +261,12 @@ class _WargaInboxScreenState extends State<WargaInboxScreen> {
                 ),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => PaymentScreen(due: d)),
+                  );
+                },
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFF076633),
                   padding: EdgeInsets.zero,
@@ -390,11 +399,48 @@ class _WargaInboxScreenState extends State<WargaInboxScreen> {
     );
   }
 
-  Widget _buildLetterCard() {
+  Widget _buildLetterList(LetterProvider provider, BuildContext context) {
+    if (provider.letters.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+        child: const Center(child: Text('Belum ada riwayat surat.', style: TextStyle(color: Colors.grey))),
+      );
+    }
+    return Column(
+      children: provider.letters.map((l) => _buildLetterCard(l, context)).toList(),
+    );
+  }
+
+  Widget _buildLetterCard(Letter letter, BuildContext context) {
+    final isReady = letter.status == 'APPROVED';
+    final isRejected = letter.status == 'REJECTED';
+    
+    Color statusColor = const Color(0xFFE8ECEF);
+    Color iconColor = Colors.grey;
+    Color iconBgColor = Colors.grey.shade300;
+    String statusText = letter.status;
+
+    if (isReady) {
+      statusColor = const Color(0xFFF1FDF4);
+      iconColor = const Color(0xFF076633);
+      iconBgColor = const Color(0xFF90FFB5);
+      statusText = 'READY';
+    } else if (isRejected) {
+      statusColor = const Color(0xFFFFF0F0);
+      iconColor = const Color(0xFFC0392B);
+      iconBgColor = const Color(0xFFFFC0CB);
+    } else {
+      statusColor = const Color(0xFFFFF7EA);
+      iconColor = Colors.orange;
+      iconBgColor = Colors.orange.shade200;
+    }
+
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1FDF4),
+        color: statusColor,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -406,10 +452,10 @@ class _WargaInboxScreenState extends State<WargaInboxScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF90FFB5),
+                  color: iconBgColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.description_outlined, color: Color(0xFF076633)),
+                child: Icon(Icons.description_outlined, color: iconColor),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -419,10 +465,10 @@ class _WargaInboxScreenState extends State<WargaInboxScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Surat Selesai Diverifikasi',
-                            style: TextStyle(
+                            letter.jenisSurat,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF1B1B1B),
@@ -433,7 +479,7 @@ class _WargaInboxScreenState extends State<WargaInboxScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Permohonan Surat Pengantar Domisili Anda telah disetujui oleh Ketua RT.',
+                      letter.keteranganKeperluan,
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade600,
@@ -452,34 +498,41 @@ class _WargaInboxScreenState extends State<WargaInboxScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFC7EBCB),
+                  color: isReady ? const Color(0xFFC7EBCB) : (isRejected ? const Color(0xFFFFD1D1) : const Color(0xFFFFE0B2)),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  'READY',
+                child: Text(
+                  statusText,
                   style: TextStyle(
-                    color: Color(0xFF076633),
+                    color: isReady ? const Color(0xFF076633) : (isRejected ? const Color(0xFFC0392B) : Colors.orange.shade800),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF076633),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              if (isReady)
+                ElevatedButton(
+                  onPressed: () async {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh file...')));
+                    final path = await context.read<LetterProvider>().downloadLetterFile(letter.id, letter.jenisSurat);
+                    if (path != null && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('File berhasil diunduh ke:\n$path')));
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF076633),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
                   ),
-                  elevation: 0,
+                  child: const Text(
+                    'Unduh PDF',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
-                child: const Text(
-                  'Unduh PDF',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
             ],
           ),
         ],
@@ -527,7 +580,12 @@ class _WargaInboxScreenState extends State<WargaInboxScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: const Color(0xFF076633),

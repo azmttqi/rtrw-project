@@ -24,4 +24,21 @@ class DueService {
       throw Exception('Gagal konfirmasi pembayaran: $e');
     }
   }
+
+  Future<void> createPayment(String bulan, int tahun, double nominal, String metodeBayar, String buktiBayarUrl) async {
+    try {
+      final response = await apiClient.post('/dues/pay', data: {
+        'bulan': bulan,
+        'tahun': tahun,
+        'nominal': nominal,
+        'metode_bayar': metodeBayar,
+        'bukti_bayar_url': buktiBayarUrl,
+      });
+      if (response.statusCode != 201) {
+        throw Exception('Gagal mengirim pembayaran');
+      }
+    } catch (e) {
+      throw Exception('Terjadi kesalahan: $e');
+    }
+  }
 }

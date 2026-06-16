@@ -10,6 +10,9 @@ import '../../dues/logic/due_provider.dart';
 import 'inbox_screen.dart';
 import 'finance_screen.dart';
 import 'profile_screen.dart';
+import 'persuratan_screen.dart';
+import 'lapor_masalah_screen.dart';
+import 'booking_fasilitas_screen.dart';
 
 class WargaDashboardScreen extends StatefulWidget {
   const WargaDashboardScreen({super.key});
@@ -35,6 +38,19 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
       context.read<DueProvider>().fetchDuesHistory(),
       context.read<AnnouncementProvider>().fetchAnnouncements(),
     ]);
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 11) {
+      return 'Selamat Pagi';
+    } else if (hour >= 11 && hour < 15) {
+      return 'Selamat Siang';
+    } else if (hour >= 15 && hour < 18) {
+      return 'Selamat Sore';
+    } else {
+      return 'Selamat Malam';
+    }
   }
 
   @override
@@ -82,10 +98,68 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 24),
+                // Section Header (Same as Admin)
+                Text(
+                  'OVERVIEW DASHBOARD',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryGreen.withOpacity(0.8),
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${_getGreeting()}, Warga',
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimaryLight,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Lingkungan RT 04 / RW 08 • Green Garden Residence',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondaryLight,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryGreen.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_rounded,
+                        size: 16,
+                        color: AppColors.primaryGreen,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        DateFormat('EEEE, d MMMM yyyy').format(DateTime.now()),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryGreen.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
                 _buildKeuanganCard(dueProvider),
                 _buildSectionHeader('Bantuan & Layanan', null),
                 const SizedBox(height: 16),
-                _buildMenuUtama(),
+                _buildMenuUtama(context),
                 const SizedBox(height: 32),
                 _buildSectionHeader('Pembaruan Komunitas', 'Lihat Semua'),
                 const SizedBox(height: 16),
@@ -102,7 +176,7 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
                 const SizedBox(height: 16),
                 _buildFasilitasGrid(),
                 const SizedBox(height: 32),
-                _buildSuratBanner(),
+                _buildSuratBanner(context),
                 const SizedBox(height: 40),
               ],
             );
@@ -287,72 +361,98 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
     );
   }
 
-  Widget _buildMenuUtama() {
+  Widget _buildMenuUtama(BuildContext context) {
     return Column(
       children: [
         _buildMenuTile(
-          Icons.description_outlined,
-          'Persuratan',
-          'Surat Domisili, dsb.',
-          const Color(0xFFE0FAF2),
+          icon: Icons.description_outlined,
+          title: 'Persuratan',
+          subtitle: 'Surat Domisili, dsb.',
+          color: const Color(0xFFE0FAF2),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PersuratanScreen()),
+            );
+          },
         ),
         const SizedBox(height: 12),
         _buildMenuTile(
-          Icons.campaign_outlined,
-          'Lapor Masalah',
-          'Sampah, Lampu, Keamanan',
-          const Color(0xFFE7F9F5),
+          icon: Icons.campaign_outlined,
+          title: 'Lapor Masalah',
+          subtitle: 'Sampah, Lampu, Keamanan',
+          color: const Color(0xFFE7F9F5),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LaporMasalahScreen()),
+            );
+          },
         ),
         const SizedBox(height: 12),
         _buildMenuTile(
-          Icons.handyman_outlined,
-          'Booking Fasilitas',
-          'Clubhouse, Lapangan Olahraga',
-          const Color(0xFFFFF7EA),
+          icon: Icons.handyman_outlined,
+          title: 'Booking Fasilitas',
+          subtitle: 'Clubhouse, Lapangan Olahraga',
+          color: const Color(0xFFFFF7EA),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const BookingFasilitasScreen()),
+            );
+          },
         ),
       ],
     );
   }
 
-  Widget _buildMenuTile(
-    IconData icon,
-    String title,
-    String subtitle,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+  Widget _buildMenuTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            child: Icon(icon, size: 20, color: Colors.teal.shade700),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
           ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                child: Icon(icon, size: 20, color: Colors.teal.shade700),
               ),
-              Text(
-                subtitle,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
               ),
+              const Spacer(),
+              const Icon(Icons.chevron_right, color: Colors.grey),
             ],
           ),
-          const Spacer(),
-          const Icon(Icons.chevron_right, color: Colors.grey),
-        ],
+        ),
       ),
     );
   }
@@ -646,7 +746,7 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
     );
   }
 
-  Widget _buildSuratBanner() {
+  Widget _buildSuratBanner(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -671,7 +771,12 @@ class _WargaDashboardScreenState extends State<WargaDashboardScreen> {
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PersuratanScreen()),
+              );
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4CB050),
               foregroundColor: Colors.white,

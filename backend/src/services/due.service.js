@@ -69,6 +69,11 @@ const dueService = {
     return bill;
   },
 
+  async getDueHistoryByFamily(familyId) {
+    if (!familyId) throw new Error('Family ID diperlukan');
+    return await duesRepository.findHistoryByFamilyId(familyId);
+  },
+
   // --- Payments ---
   async createPayment({ pembayar_family_id, pembayar_rt_id, bulan, tahun, nominal, metode_bayar, bukti_bayar_url }) {
     if (!bulan || !tahun || !nominal || !metode_bayar) {

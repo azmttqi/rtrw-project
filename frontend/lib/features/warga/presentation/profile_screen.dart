@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../auth/logic/auth_provider.dart';
+import 'edit_profile_screen.dart';
+import 'notification_settings_screen.dart';
+import 'family_members_screen.dart';
+import 'my_documents_screen.dart';
+import 'help_center_screen.dart';
+import 'contact_rt_screen.dart';
 
 class WargaProfileScreen extends StatefulWidget {
   const WargaProfileScreen({super.key});
@@ -144,18 +150,30 @@ class _WargaProfileScreenState extends State<WargaProfileScreen> {
 
               // Menu Groups
               _buildMenuGroup('AKUN', [
-                _buildMenuItem(Icons.person_outline, 'Ubah Profil'),
-                _buildMenuItem(Icons.security_outlined, 'Pengaturan Keamanan'),
+                _buildMenuItem(Icons.person_outline, 'Ubah Profil', onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                }),
+                _buildMenuItem(Icons.security_outlined, 'Pengaturan Keamanan', onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationSettingsScreen()));
+                }),
               ]),
               const SizedBox(height: 24),
               _buildMenuGroup('DATA WARGA', [
-                _buildMenuItem(Icons.work_outline, 'Dokumen Saya', subtitle: 'KTP, KK, & Surat Nikah'),
-                _buildMenuItem(Icons.people_outline, 'Anggota Keluarga'),
+                _buildMenuItem(Icons.work_outline, 'Dokumen Saya', subtitle: 'KTP, KK, & Surat Nikah', onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const MyDocumentsScreen()));
+                }),
+                _buildMenuItem(Icons.people_outline, 'Anggota Keluarga', onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const FamilyMembersScreen()));
+                }),
               ]),
               const SizedBox(height: 24),
               _buildMenuGroup('BANTUAN & LAINNYA', [
-                _buildMenuItem(Icons.help_outline, 'Pusat Bantuan'),
-                _buildMenuItem(Icons.home_outlined, 'Hubungi RT'),
+                _buildMenuItem(Icons.help_outline, 'Pusat Bantuan', onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpCenterScreen()));
+                }),
+                _buildMenuItem(Icons.home_outlined, 'Hubungi RT', onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactRTScreen()));
+                }),
                 _buildMenuItem(Icons.logout, 'Keluar', isDestructive: true, onTap: () => _showLogoutDialog(context, authProvider)),
               ]),
               const SizedBox(height: 40),
