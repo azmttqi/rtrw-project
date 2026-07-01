@@ -107,8 +107,8 @@ const dashboardRepository = {
       })),
       latestComplaints: complaintsResult.rows,
       ageDistribution,
-      totalPendingApprovals: parseInt(rtCountResult.rows[0].count), // RW has no direct totalPendingApprovals var, but we'll add the list
-      pendingApprovalsList: pendingApprovalsListResult.rows
+      totalPendingApprovals: 0,
+      pendingApprovalsList: []
     };
   },
 
