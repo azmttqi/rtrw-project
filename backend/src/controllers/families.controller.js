@@ -31,6 +31,7 @@ const familiesController = {
        if (error.message === 'Data keluarga tidak lengkap' || error.message === 'Nomor KK sudah terdaftar') {
         return validationErrorResponse(res, error.message);
       }
+      console.error("DEBUG CREATE FAMILY ERROR:", error);
       next(error);
     }
   },

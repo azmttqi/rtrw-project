@@ -49,7 +49,7 @@ describe('E2E: Manajemen Pengumuman (Announcements)', () => {
       .set('Authorization', `Bearer ${wargaToken}`);
 
     expect(resList.status).toBe(200);
-    const found = resList.body.data.find(a => a.id === announcementId);
+    const found = resList.body.data.announcements.find(a => a.id === announcementId);
     expect(found).toBeDefined();
     expect(found.judul).toBe(newAnnouncement.judul);
 

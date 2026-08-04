@@ -37,8 +37,8 @@ describe('E2E: Manajemen Keluarga / KK (Families)', () => {
     const familyPayload = {
       rt_id: testData.rtId,
       no_kk: '3201999988880001',
-      tipe_warga: 'TETAP',
-      status_tinggal: 'RUMAH_SENDIRI',
+      tipe_warga: 'BARU',
+      status_tinggal: 'TETAP',
       status_pernikahan: 'KAWIN'
     };
 
