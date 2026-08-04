@@ -16,7 +16,6 @@ const announcementsController = {
       if (error.message.includes('tidak lengkap') || error.message.includes('diisi')) {
         return validationErrorResponse(res, error.message);
       }
-      console.error("DEBUG CREATE ANNOUNCEMENT ERROR:", error);
       next(error);
     }
   },

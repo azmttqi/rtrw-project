@@ -7,8 +7,9 @@ const Tesseract = require('tesseract.js');
 jest.mock('../../../backend/src/services/dashboard.service');
 jest.mock('../../../backend/src/repositories/finance.repository');
 jest.mock('../../../backend/src/utils/response');
-jest.mock('tesseract.js');
-
+jest.mock('tesseract.js', () => ({
+  recognize: jest.fn()
+}));
 describe('Dashboard Controller', () => {
   let req, res, next;
 
