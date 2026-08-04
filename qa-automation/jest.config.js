@@ -19,5 +19,8 @@ module.exports = {
     'node_modules',
     '<rootDir>/backend/node_modules'
   ],
+  moduleNameMapper: {
+    '^tesseract\\.js$': '<rootDir>/backend/node_modules/tesseract.js'
+  },
   setupFilesAfterEnv: ['<rootDir>/qa-automation/jest.setup.js']
 };
