@@ -25,7 +25,7 @@ describe('E2E: Manajemen Pengumuman (Announcements)', () => {
   it('1. Alur Lengkap: RT Buat Pengumuman -> Warga Membaca -> RT Update -> RT Delete (201 & 200)', async () => {
     // === Tahap 1: RT Membuat Pengumuman ===
     const newAnnouncement = {
-      target: 'RT',
+      target: 'WARGA_RT',
       target_rt_id: testData.rtId,
       judul: 'Kerja Bakti Minggu Ini',
       konten: 'Harap seluruh warga berkumpul di lapangan jam 7 pagi.',
@@ -77,7 +77,7 @@ describe('E2E: Manajemen Pengumuman (Announcements)', () => {
       .post('/api/announcements')
       .set('Authorization', `Bearer ${wargaToken}`)
       .send({
-        target: 'RT',
+        target: 'WARGA_RT',
         judul: 'Pengumuman Ilegal',
         konten: 'Warga mencoba posting'
       });
@@ -91,7 +91,7 @@ describe('E2E: Manajemen Pengumuman (Announcements)', () => {
       .post('/api/announcements')
       .set('Authorization', `Bearer ${rtToken}`)
       .send({
-        target: 'RT',
+        target: 'WARGA_RT',
         konten: 'Hanya ada konten'
       });
 
