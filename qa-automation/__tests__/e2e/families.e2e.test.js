@@ -39,7 +39,7 @@ describe('E2E: Manajemen Keluarga / KK (Families)', () => {
       no_kk: '3201999988880001',
       tipe_warga: 'TETAP',
       status_tinggal: 'RUMAH_SENDIRI',
-      status_pernikahan: 'MENIKAH'
+      status_pernikahan: 'KAWIN'
     };
 
     const resCreateFamily = await request(app)

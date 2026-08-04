@@ -13,7 +13,7 @@ const announcementsController = {
 
       return createdResponse(res, 'Pengumuman dibuat', announcement);
     } catch (error) {
-      if (error.message.includes('не lengkap') || error.message.includes('diisi')) {
+      if (error.message.includes('tidak lengkap') || error.message.includes('diisi')) {
         return validationErrorResponse(res, error.message);
       }
       next(error);
