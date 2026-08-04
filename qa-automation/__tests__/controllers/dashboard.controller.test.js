@@ -7,17 +7,17 @@ const Tesseract = require('tesseract.js');
 jest.mock('../../../backend/src/services/dashboard.service');
 jest.mock('../../../backend/src/repositories/finance.repository');
 jest.mock('../../../backend/src/utils/response');
-jest.mock('tesseract.js', () => ({
-  recognize: jest.fn()
-}), { virtual: true });
+jest.mock('tesseract.js');
 
 describe('Dashboard Controller', () => {
   let req, res, next;
 
   beforeEach(() => {
     req = {
-      user: {},
-      file: null
+      user: { id: 1, role: 'RW', rw_id: 10, rt_id: 5 },
+      query: {},
+      body: {},
+      params: {}
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -28,9 +28,8 @@ describe('Dashboard Controller', () => {
   });
 
   describe('getStats', () => {
-    it('should get dashboard stats and return 200 (Success Path)', async () => {
-      req.user = { id: 1, role: 'WARGA' };
-      const mockStats = { total_warga: 10 };
+    it('should return dashboard statistics successfully (Success Path)', async () => {
+      const mockStats = { totalWarga: 150, totalRT: 5, kasRW: 10000000 };
       dashboardService.getStats.mockResolvedValue(mockStats);
 
       await dashboardController.getStats(req, res, next);
@@ -39,9 +38,8 @@ describe('Dashboard Controller', () => {
       expect(successResponse).toHaveBeenCalledWith(res, 'Dashboard statistics fetched', mockStats);
     });
 
-    it('should call next on error (Negative Path)', async () => {
-      req.user = { id: 1 };
-      const error = new Error('Database Error');
+    it('should call next on service failure (Negative Path)', async () => {
+      const error = new Error('Database stats error');
       dashboardService.getStats.mockRejectedValue(error);
 
       await dashboardController.getStats(req, res, next);
@@ -51,42 +49,42 @@ describe('Dashboard Controller', () => {
   });
 
   describe('getFinanceSummary', () => {
-    it('should return finance summary for RW (Success Path)', async () => {
-      req.user = { role: 'RW', rw_id: 1 };
-      const mockData = { total_pemasukan: 1000 };
-      financeRepository.getFinanceSummaryForRW.mockResolvedValue(mockData);
+    it('should fetch finance summary for RW role (Success Path)', async () => {
+      req.user = { id: 1, role: 'RW', rw_id: 10 };
+      const mockFinanceRW = { totalPemasukan: 5000000, totalPengeluaran: 2000000 };
+      financeRepository.getFinanceSummaryForRW.mockResolvedValue(mockFinanceRW);
 
       await dashboardController.getFinanceSummary(req, res, next);
 
-      expect(financeRepository.getFinanceSummaryForRW).toHaveBeenCalledWith(1);
-      expect(successResponse).toHaveBeenCalledWith(res, 'Finance summary', mockData);
+      expect(financeRepository.getFinanceSummaryForRW).toHaveBeenCalledWith(10);
+      expect(successResponse).toHaveBeenCalledWith(res, 'Finance summary', mockFinanceRW);
     });
 
-    it('should return finance summary for RT (Success Path)', async () => {
-      req.user = { role: 'RT', rt_id: 1 };
-      const mockData = { total_pemasukan: 500 };
-      financeRepository.getFinanceSummaryForRT.mockResolvedValue(mockData);
+    it('should fetch finance summary for RT role (Success Path)', async () => {
+      req.user = { id: 2, role: 'RT', rt_id: 5 };
+      const mockFinanceRT = { totalPemasukan: 2000000, totalPengeluaran: 500000 };
+      financeRepository.getFinanceSummaryForRT.mockResolvedValue(mockFinanceRT);
 
       await dashboardController.getFinanceSummary(req, res, next);
 
-      expect(financeRepository.getFinanceSummaryForRT).toHaveBeenCalledWith(1);
-      expect(successResponse).toHaveBeenCalledWith(res, 'Finance summary', mockData);
+      expect(financeRepository.getFinanceSummaryForRT).toHaveBeenCalledWith(5);
+      expect(successResponse).toHaveBeenCalledWith(res, 'Finance summary', mockFinanceRT);
     });
 
-    it('should return finance summary for WARGA (Success Path)', async () => {
-      req.user = { role: 'WARGA', id: 1 };
-      const mockData = { tagihan_bulanan: 100 };
-      financeRepository.getFinanceSummaryForWarga.mockResolvedValue(mockData);
+    it('should fetch finance summary for WARGA role (Success Path)', async () => {
+      req.user = { id: 3, role: 'WARGA' };
+      const mockFinanceWarga = { totalTagihan: 50000, statusBayar: 'LUNAS' };
+      financeRepository.getFinanceSummaryForWarga.mockResolvedValue(mockFinanceWarga);
 
       await dashboardController.getFinanceSummary(req, res, next);
 
-      expect(financeRepository.getFinanceSummaryForWarga).toHaveBeenCalledWith(1);
-      expect(successResponse).toHaveBeenCalledWith(res, 'Finance summary', mockData);
+      expect(financeRepository.getFinanceSummaryForWarga).toHaveBeenCalledWith(3);
+      expect(successResponse).toHaveBeenCalledWith(res, 'Finance summary', mockFinanceWarga);
     });
 
-    it('should call next on error (Negative Path)', async () => {
-      req.user = { role: 'RW', rw_id: 1 };
-      const error = new Error('DB Error');
+    it('should call next on repository failure (Negative Path)', async () => {
+      req.user = { id: 1, role: 'RW', rw_id: 10 };
+      const error = new Error('Query error');
       financeRepository.getFinanceSummaryForRW.mockRejectedValue(error);
 
       await dashboardController.getFinanceSummary(req, res, next);
@@ -96,22 +94,8 @@ describe('Dashboard Controller', () => {
   });
 
   describe('scanReceipt', () => {
-    it('should scan receipt and return guessed amount (Success Path)', async () => {
-      req.file = { buffer: Buffer.from('mock image') };
-      const mockTesseractResult = { data: { text: 'Total: Rp 150.000,00' } };
-      Tesseract.recognize.mockResolvedValue(mockTesseractResult);
-
-      await dashboardController.scanReceipt(req, res, next);
-
-      expect(Tesseract.recognize).toHaveBeenCalledWith(req.file.buffer, 'ind', expect.any(Object));
-      expect(successResponse).toHaveBeenCalledWith(res, 'Receipt scanned successfully', {
-        amount: 15000000,
-        rawText: 'Total: Rp 150.000,00'
-      });
-    });
-
-    it('should return 400 if no file is provided (Negative Path)', async () => {
-      req.file = null;
+    it('should return 400 if no image file is uploaded (Negative Path)', async () => {
+      req.file = undefined;
 
       await dashboardController.scanReceipt(req, res, next);
 
@@ -119,20 +103,47 @@ describe('Dashboard Controller', () => {
       expect(res.json).toHaveBeenCalledWith({ success: false, message: 'No image uploaded' });
     });
 
-    it('should return 500 if tesseract fails (Negative Path)', async () => {
-      req.file = { buffer: Buffer.from('mock image') };
-      const error = new Error('OCR Error');
-      Tesseract.recognize.mockRejectedValue(error);
+    it('should extract amount and rawText from receipt image successfully (Success Path)', async () => {
+      req.file = { buffer: Buffer.from('fake image content') };
+      Tesseract.recognize.mockResolvedValue({
+        data: { text: 'STRUK PEMBAYARAN\nTOTAL: Rp 150.000\nTerima Kasih' }
+      });
 
-      // We should mock console.error to avoid noise in test output
-      jest.spyOn(console, 'error').mockImplementation(() => {});
+      await dashboardController.scanReceipt(req, res, next);
+
+      expect(Tesseract.recognize).toHaveBeenCalledWith(
+        req.file.buffer,
+        'ind',
+        expect.any(Object)
+      );
+      expect(successResponse).toHaveBeenCalledWith(res, 'Receipt scanned successfully', {
+        amount: 150000,
+        rawText: 'STRUK PEMBAYARAN\nTOTAL: Rp 150.000\nTerima Kasih'
+      });
+    });
+
+    it('should handle text with no numbers matched and set amount to 0 (Success Path)', async () => {
+      req.file = { buffer: Buffer.from('fake image content') };
+      Tesseract.recognize.mockResolvedValue({
+        data: { text: 'STRUK TANPA NOMINAL' }
+      });
+
+      await dashboardController.scanReceipt(req, res, next);
+
+      expect(successResponse).toHaveBeenCalledWith(res, 'Receipt scanned successfully', {
+        amount: 0,
+        rawText: 'STRUK TANPA NOMINAL'
+      });
+    });
+
+    it('should return 500 when OCR processing fails (Negative Path)', async () => {
+      req.file = { buffer: Buffer.from('corrupt image') };
+      Tesseract.recognize.mockRejectedValue(new Error('Tesseract failed'));
 
       await dashboardController.scanReceipt(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ success: false, message: 'Failed to process image' });
-      
-      console.error.mockRestore();
     });
   });
 });

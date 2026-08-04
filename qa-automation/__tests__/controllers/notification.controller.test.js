@@ -12,7 +12,10 @@ describe('Notification Controller', () => {
 
   beforeEach(() => {
     req = {
-      user: {}
+      user: { id: 1, role: 'RW', rw_id: 10, rt_id: 5 },
+      query: {},
+      body: {},
+      params: {}
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -23,31 +26,39 @@ describe('Notification Controller', () => {
   });
 
   describe('getDuesNotifications', () => {
-    it('should return dues notifications for RW (Success Path)', async () => {
-      req.user = { role: 'RW', rw_id: 1 };
-      const mockData = [{ id: 1 }];
+    it('should return dues notifications for RW role (Success Path)', async () => {
+      req.user = { id: 1, role: 'RW', rw_id: 10 };
+      const mockData = [{ id: 1, title: 'Iuran RT 01 Jatuh Tempo' }];
       notificationRepository.getDuesNotificationsForRW.mockResolvedValue(mockData);
 
       await notificationController.getDuesNotifications(req, res, next);
 
-      expect(notificationRepository.getDuesNotificationsForRW).toHaveBeenCalledWith(1);
+      expect(notificationRepository.getDuesNotificationsForRW).toHaveBeenCalledWith(10);
       expect(successResponse).toHaveBeenCalledWith(res, 'Notifikasi keuangan', mockData);
     });
 
-    it('should return dues notifications for RT (Success Path)', async () => {
-      req.user = { role: 'RT', rt_id: 1 };
-      const mockData = [{ id: 1 }];
+    it('should return dues notifications for RT role (Success Path)', async () => {
+      req.user = { id: 2, role: 'RT', rt_id: 5 };
+      const mockData = [{ id: 2, title: 'Warga A belum bayar iuran' }];
       notificationRepository.getDuesNotificationsForRT.mockResolvedValue(mockData);
 
       await notificationController.getDuesNotifications(req, res, next);
 
-      expect(notificationRepository.getDuesNotificationsForRT).toHaveBeenCalledWith(1);
+      expect(notificationRepository.getDuesNotificationsForRT).toHaveBeenCalledWith(5);
       expect(successResponse).toHaveBeenCalledWith(res, 'Notifikasi keuangan', mockData);
     });
 
-    it('should call next on error (Negative Path)', async () => {
-      req.user = { role: 'RW', rw_id: 1 };
-      const error = new Error('DB Error');
+    it('should return empty list for other roles (Success Path)', async () => {
+      req.user = { id: 3, role: 'WARGA' };
+
+      await notificationController.getDuesNotifications(req, res, next);
+
+      expect(successResponse).toHaveBeenCalledWith(res, 'Notifikasi keuangan', []);
+    });
+
+    it('should call next on repository error (Negative Path)', async () => {
+      req.user = { id: 1, role: 'RW', rw_id: 10 };
+      const error = new Error('Query error');
       notificationRepository.getDuesNotificationsForRW.mockRejectedValue(error);
 
       await notificationController.getDuesNotifications(req, res, next);
@@ -57,31 +68,39 @@ describe('Notification Controller', () => {
   });
 
   describe('getLetterInbox', () => {
-    it('should return letter inbox for RW (Success Path)', async () => {
-      req.user = { role: 'RW', rw_id: 1 };
-      const mockData = [{ id: 1 }];
-      letterRepository.getLettersByRW.mockResolvedValue(mockData);
+    it('should return letter inbox for RW role (Success Path)', async () => {
+      req.user = { id: 1, role: 'RW', rw_id: 10 };
+      const mockLetters = [{ id: 1, jenis_surat: 'SURAT_PENGANTAR_KTP', status: 'PENDING_RW' }];
+      letterRepository.getLettersByRW.mockResolvedValue(mockLetters);
 
       await notificationController.getLetterInbox(req, res, next);
 
-      expect(letterRepository.getLettersByRW).toHaveBeenCalledWith(1);
-      expect(successResponse).toHaveBeenCalledWith(res, 'Inbox surat', mockData);
+      expect(letterRepository.getLettersByRW).toHaveBeenCalledWith(10);
+      expect(successResponse).toHaveBeenCalledWith(res, 'Inbox surat', mockLetters);
     });
 
-    it('should return letter inbox for RT (Success Path)', async () => {
-      req.user = { role: 'RT', rt_id: 1 };
-      const mockData = [{ id: 1 }];
-      letterRepository.getLettersByRT.mockResolvedValue(mockData);
+    it('should return letter inbox for RT role (Success Path)', async () => {
+      req.user = { id: 2, role: 'RT', rt_id: 5 };
+      const mockLetters = [{ id: 2, jenis_surat: 'SURAT_PENGANTAR_KK', status: 'PENDING_RT' }];
+      letterRepository.getLettersByRT.mockResolvedValue(mockLetters);
 
       await notificationController.getLetterInbox(req, res, next);
 
-      expect(letterRepository.getLettersByRT).toHaveBeenCalledWith(1);
-      expect(successResponse).toHaveBeenCalledWith(res, 'Inbox surat', mockData);
+      expect(letterRepository.getLettersByRT).toHaveBeenCalledWith(5);
+      expect(successResponse).toHaveBeenCalledWith(res, 'Inbox surat', mockLetters);
     });
 
-    it('should call next on error (Negative Path)', async () => {
-      req.user = { role: 'RW', rw_id: 1 };
-      const error = new Error('DB Error');
+    it('should return empty list for other roles (Success Path)', async () => {
+      req.user = { id: 3, role: 'WARGA' };
+
+      await notificationController.getLetterInbox(req, res, next);
+
+      expect(successResponse).toHaveBeenCalledWith(res, 'Inbox surat', []);
+    });
+
+    it('should call next on error in getLetterInbox (Negative Path)', async () => {
+      req.user = { id: 1, role: 'RW', rw_id: 10 };
+      const error = new Error('Database inbox error');
       letterRepository.getLettersByRW.mockRejectedValue(error);
 
       await notificationController.getLetterInbox(req, res, next);

@@ -1,21 +1,19 @@
 const announcementsController = require('../../../backend/src/controllers/announcements.controller');
 const announcementService = require('../../../backend/src/services/announcement.service');
-const { successResponse, createdResponse, errorResponse, validationErrorResponse, notFoundResponse } = require('../../../backend/src/utils/response');
-const { getPaginationMeta } = require('../../../backend/src/utils/pagination');
+const { successResponse, createdResponse, validationErrorResponse, notFoundResponse } = require('../../../backend/src/utils/response');
 
 jest.mock('../../../backend/src/services/announcement.service');
 jest.mock('../../../backend/src/utils/response');
-jest.mock('../../../backend/src/utils/pagination');
 
 describe('Announcements Controller', () => {
   let req, res, next;
 
   beforeEach(() => {
     req = {
+      user: { id: 1, role: 'RT', rw_id: 10, rt_id: 5 },
       query: {},
       body: {},
-      params: {},
-      user: {}
+      params: {}
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -27,35 +25,39 @@ describe('Announcements Controller', () => {
 
   describe('createAnnouncement', () => {
     it('should create an announcement and return 201 (Success Path)', async () => {
-      req.user = { id: 1 };
-      req.body = { judul: 'Test Pengumuman', konten: 'Test konten' };
-      const mockAnnouncement = { id: 1, ...req.body, pembuat_user_id: 1 };
-      announcementService.createAnnouncement.mockResolvedValue(mockAnnouncement);
+      req.body = {
+        target: 'RT',
+        target_rt_id: 5,
+        judul: 'Kerja Bakti',
+        konten: 'Kerja bakti hari Minggu',
+        foto_url: 'http://example.com/photo.jpg',
+        is_kegiatan: true,
+        tanggal_kegiatan: '2026-08-10'
+      };
+      const mockCreated = { id: 100, ...req.body, pembuat_user_id: 1 };
+      announcementService.createAnnouncement.mockResolvedValue(mockCreated);
 
       await announcementsController.createAnnouncement(req, res, next);
 
       expect(announcementService.createAnnouncement).toHaveBeenCalledWith({
         pembuat_user_id: 1,
-        judul: 'Test Pengumuman',
-        konten: 'Test konten',
-        target: undefined, target_rt_id: undefined, foto_url: undefined, is_kegiatan: undefined, tanggal_kegiatan: undefined
+        ...req.body
       });
-      expect(createdResponse).toHaveBeenCalledWith(res, 'Pengumuman dibuat', mockAnnouncement);
+      expect(createdResponse).toHaveBeenCalledWith(res, 'Pengumuman dibuat', mockCreated);
     });
 
-    it('should return validation error if data is incomplete (Negative Path)', async () => {
-      const error = new Error('Data tidak lengkap, judul dan konten wajib diisi');
-      req.user = { id: 1 };
+    it('should return validation error if required fields are missing (Negative Path)', async () => {
+      const error = new Error('Judul dan konten wajib diisi');
       announcementService.createAnnouncement.mockRejectedValue(error);
 
       await announcementsController.createAnnouncement(req, res, next);
 
-      expect(validationErrorResponse).toHaveBeenCalledWith(res, 'Data tidak lengkap, judul dan konten wajib diisi');
+      expect(validationErrorResponse).toHaveBeenCalledWith(res, 'Judul dan konten wajib diisi');
+      expect(next).not.toHaveBeenCalled();
     });
 
-    it('should call next with generic error (Negative Path)', async () => {
-      const error = new Error('Database Error');
-      req.user = { id: 1 };
+    it('should call next with generic error if service throws unexpected error (Negative Path)', async () => {
+      const error = new Error('Database connection lost');
       announcementService.createAnnouncement.mockRejectedValue(error);
 
       await announcementsController.createAnnouncement(req, res, next);
@@ -65,37 +67,59 @@ describe('Announcements Controller', () => {
   });
 
   describe('getAnnouncements', () => {
-    it('should return announcements (Success Path)', async () => {
-      req.query = { page: 1, limit: 10 };
-      req.user = { role: 'WARGA', rw_id: 1 };
-      const mockResult = { data: [{ id: 1, judul: 'Test' }], total: 1 };
+    it('should return announcements filtered by user rw_id for non-admin (Success Path)', async () => {
+      req.user = { id: 2, role: 'WARGA', rw_id: 10 };
+      req.query = { rt_id: '5', page: '1', limit: '10' };
+      const mockResult = {
+        data: [{ id: 1, judul: 'Pengumuman 1' }],
+        total: 1
+      };
       announcementService.getAnnouncements.mockResolvedValue(mockResult);
-      getPaginationMeta.mockReturnValue({ page: 1, limit: 10, total: 1, totalPages: 1 });
 
       await announcementsController.getAnnouncements(req, res, next);
 
-      expect(announcementService.getAnnouncements).toHaveBeenCalledWith({ rt_id: undefined, rw_id: 1 }, 1, 10);
-      expect(successResponse).toHaveBeenCalledWith(res, 'Daftar pengumuman', {
-        announcements: mockResult.data,
-        pagination: { page: 1, limit: 10, total: 1, totalPages: 1 }
-      });
+      expect(announcementService.getAnnouncements).toHaveBeenCalledWith(
+        { rt_id: '5', rw_id: 10 },
+        '1',
+        '10'
+      );
+      expect(successResponse).toHaveBeenCalledWith(
+        res,
+        'Daftar pengumuman',
+        expect.objectContaining({
+          announcements: mockResult.data,
+          pagination: expect.any(Object)
+        })
+      );
     });
 
-    it('should allow admin to see all via query (Success Path)', async () => {
-      req.query = { page: 1, limit: 10, rw_id: 2 };
-      req.user = { role: 'ADMIN' };
-      const mockResult = { data: [{ id: 1, judul: 'Test' }], total: 1 };
+    it('should allow admin to filter by query rw_id or view all (Success Path)', async () => {
+      req.user = { id: 99, role: 'ADMIN' };
+      req.query = { rw_id: '15', page: '1', limit: '10' };
+      const mockResult = {
+        data: [{ id: 2, judul: 'Pengumuman Admin' }],
+        total: 1
+      };
       announcementService.getAnnouncements.mockResolvedValue(mockResult);
-      getPaginationMeta.mockReturnValue({ page: 1, limit: 10, total: 1, totalPages: 1 });
 
       await announcementsController.getAnnouncements(req, res, next);
 
-      expect(announcementService.getAnnouncements).toHaveBeenCalledWith({ rt_id: undefined, rw_id: 2 }, 1, 10);
+      expect(announcementService.getAnnouncements).toHaveBeenCalledWith(
+        { rt_id: undefined, rw_id: '15' },
+        '1',
+        '10'
+      );
+      expect(successResponse).toHaveBeenCalledWith(
+        res,
+        'Daftar pengumuman',
+        expect.objectContaining({
+          announcements: mockResult.data
+        })
+      );
     });
 
-    it('should call next with generic error (Negative Path)', async () => {
-      const error = new Error('Database Error');
-      req.user = { role: 'WARGA', rw_id: 1 };
+    it('should call next if service throws an error (Negative Path)', async () => {
+      const error = new Error('Query error');
       announcementService.getAnnouncements.mockRejectedValue(error);
 
       await announcementsController.getAnnouncements(req, res, next);
@@ -106,22 +130,25 @@ describe('Announcements Controller', () => {
 
   describe('updateAnnouncement', () => {
     it('should update announcement and return 200 (Success Path)', async () => {
-      req.params.id = '1';
-      req.body = { judul: 'Updated', konten: 'Updated konten' };
-      const mockAnnouncement = { id: 1, ...req.body };
-      announcementService.updateAnnouncement.mockResolvedValue(mockAnnouncement);
+      req.params.id = '100';
+      req.body = {
+        judul: 'Judul Baru',
+        konten: 'Konten Baru',
+        is_kegiatan: false,
+        tanggal_kegiatan: null
+      };
+      const mockUpdated = { id: 100, ...req.body };
+      announcementService.updateAnnouncement.mockResolvedValue(mockUpdated);
 
       await announcementsController.updateAnnouncement(req, res, next);
 
-      expect(announcementService.updateAnnouncement).toHaveBeenCalledWith('1', {
-        judul: 'Updated', konten: 'Updated konten', is_kegiatan: undefined, tanggal_kegiatan: undefined
-      });
-      expect(successResponse).toHaveBeenCalledWith(res, 'Pengumuman diperbarui', mockAnnouncement);
+      expect(announcementService.updateAnnouncement).toHaveBeenCalledWith('100', req.body);
+      expect(successResponse).toHaveBeenCalledWith(res, 'Pengumuman diperbarui', mockUpdated);
     });
 
-    it('should return not found if announcement not found (Negative Path)', async () => {
-      const error = new Error('Pengumuman tidak ditemukan');
+    it('should return notFoundResponse if announcement is not found (Negative Path)', async () => {
       req.params.id = '999';
+      const error = new Error('Pengumuman tidak ditemukan');
       announcementService.updateAnnouncement.mockRejectedValue(error);
 
       await announcementsController.updateAnnouncement(req, res, next);
@@ -129,8 +156,9 @@ describe('Announcements Controller', () => {
       expect(notFoundResponse).toHaveBeenCalledWith(res, 'Pengumuman tidak ditemukan');
     });
 
-    it('should call next with generic error (Negative Path)', async () => {
-      const error = new Error('Some error');
+    it('should call next on generic error during update (Negative Path)', async () => {
+      req.params.id = '100';
+      const error = new Error('Database error');
       announcementService.updateAnnouncement.mockRejectedValue(error);
 
       await announcementsController.updateAnnouncement(req, res, next);
@@ -141,18 +169,18 @@ describe('Announcements Controller', () => {
 
   describe('deleteAnnouncement', () => {
     it('should delete announcement and return 200 (Success Path)', async () => {
-      req.params.id = '1';
+      req.params.id = '100';
       announcementService.deleteAnnouncement.mockResolvedValue(true);
 
       await announcementsController.deleteAnnouncement(req, res, next);
 
-      expect(announcementService.deleteAnnouncement).toHaveBeenCalledWith('1');
+      expect(announcementService.deleteAnnouncement).toHaveBeenCalledWith('100');
       expect(successResponse).toHaveBeenCalledWith(res, 'Pengumuman dihapus', null);
     });
 
-    it('should return not found if announcement not found (Negative Path)', async () => {
-      const error = new Error('Pengumuman tidak ditemukan');
+    it('should return notFoundResponse if announcement to delete does not exist (Negative Path)', async () => {
       req.params.id = '999';
+      const error = new Error('Pengumuman tidak ditemukan');
       announcementService.deleteAnnouncement.mockRejectedValue(error);
 
       await announcementsController.deleteAnnouncement(req, res, next);
@@ -160,8 +188,9 @@ describe('Announcements Controller', () => {
       expect(notFoundResponse).toHaveBeenCalledWith(res, 'Pengumuman tidak ditemukan');
     });
 
-    it('should call next with generic error (Negative Path)', async () => {
-      const error = new Error('Delete failed');
+    it('should call next on generic error during delete (Negative Path)', async () => {
+      req.params.id = '100';
+      const error = new Error('Foreign key error');
       announcementService.deleteAnnouncement.mockRejectedValue(error);
 
       await announcementsController.deleteAnnouncement(req, res, next);
