@@ -23,11 +23,11 @@ void main() {
       await tester.tap(find.text('Masuk'));
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      final profileTab = find.text('Profil').or(find.text('Profile'));
+      final profileTab = find.byWidgetPredicate((widget) => widget is Text && (widget.data == 'Profil' || widget.data == 'Profile'));
       if (profileTab.evaluate().isNotEmpty) {
         await tester.tap(profileTab.first);
         await tester.pumpAndSettle();
-        expect(find.text('Keluar').or(find.text('Logout')), findsWidgets);
+        expect(find.byWidgetPredicate((widget) => widget is Text && (widget.data == 'Keluar' || widget.data == 'Logout')), findsWidgets);
       }
     });
   });

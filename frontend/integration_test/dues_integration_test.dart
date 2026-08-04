@@ -23,7 +23,7 @@ void main() {
       await tester.tap(find.text('Masuk'));
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      final duesMenu = find.text('Keuangan').or(find.text('Iuran'));
+      final duesMenu = find.byWidgetPredicate((widget) => widget is Text && (widget.data == 'Keuangan' || widget.data == 'Iuran'));
       if (duesMenu.evaluate().isNotEmpty) {
         await tester.tap(duesMenu.first);
         await tester.pumpAndSettle();

@@ -36,7 +36,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.enterText(find.byType(EditableText).first, 'Test Pengumuman UI');
         await tester.enterText(find.byType(EditableText).last, 'Isi konten pengumuman test');
-        await tester.tap(find.text('Simpan').or(find.text('Kirim')));
+        await tester.tap(find.byWidgetPredicate((widget) => widget is Text && (widget.data == 'Simpan' || widget.data == 'Kirim')));
         await tester.pumpAndSettle();
       }
     });
