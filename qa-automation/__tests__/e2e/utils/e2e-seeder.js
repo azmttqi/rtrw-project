@@ -5,6 +5,7 @@ async function seedBaseData() {
   const rwId = 9991;
   const rtId = 9991;
   const familyId = 9991;
+  const rwUserId = 9990;
   const rtUserId = 9991;
   const residentUserId = 9992;
 
@@ -20,7 +21,14 @@ async function seedBaseData() {
     [rtId, rwId, '99']
   );
 
-  // 3. Seed Users (RT and Warga) FIRST
+  // 3. Seed Users (RW, RT, and Warga)
+  const hashedRWPassword = await bcrypt.hash('password123', 10);
+  await pool.query(
+    `INSERT INTO users (id, nama, no_wa, password_hash, role, is_verified, rw_id) 
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [rwUserId, 'Bapak RW E2E', '081200000000', hashedRWPassword, 'RW', true, rwId]
+  );
+
   const hashedRTPassword = await bcrypt.hash('password123', 10);
   await pool.query(
     `INSERT INTO users (id, nama, no_wa, password_hash, role, is_verified, rt_id, rw_id) 
@@ -42,9 +50,7 @@ async function seedBaseData() {
     [familyId, residentUserId, rtId, '1234567890123456', 'LAMA', 'TETAP', 'KAWIN', 'APPROVED']
   );
 
-  // Users table doesn't have family_id, it uses families.user_id instead.
-
-  return { rwId, rtId, familyId, rtUserId, residentUserId };
+  return { rwId, rtId, familyId, rwUserId, rtUserId, residentUserId };
 }
 
 module.exports = { seedBaseData };
